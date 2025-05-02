@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Dashboard</h1>
+    <p>Total des factures d'achat : <span th:text="${dashboard.totalPurchaseInvoices}">0</span></p>
+    <p>Total des factures de vente : <span th:text="${dashboard.totalSalesInvoices}">0</span></p>
+    <p>Total des clients : <span th:text="${dashboard.totalCustomers}">0</span></p>
+
+    <div th:if="${error}">
+        <p style="color: red;">Erreur : ${error}</p>
+    </div>
+</body>
+</html>
