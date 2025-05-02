@@ -34,6 +34,9 @@ public class SupplierController extends BaseController {
                 return "redirect:/login?error=session_expired";
             }
 
+            // Ajouter l'indicateur de page active
+            model.addAttribute("activePage", "supplier");
+
             String url = "http://erpnext.localhost:8000/api/method/frappe.desk.reportview.get";
 
             // Préparer les headers

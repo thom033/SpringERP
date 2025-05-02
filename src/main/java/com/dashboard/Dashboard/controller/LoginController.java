@@ -60,7 +60,7 @@ public class LoginController {
                     sid = sid.split("sid=")[1].split(";")[0]; // Extraire la valeur du sid
                     sessionManager.setSid(sid); // Stocker le sid dans SessionManager
                 }
-                return "redirect:/hello"; // Rediriger vers une page "hello world"
+                return "redirect:/supplier"; // Rediriger vers la page supplier
             } else {
                 System.err.println("Reponse serveur: " + response);
 

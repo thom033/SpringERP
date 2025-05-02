@@ -31,6 +31,9 @@ public class PurchaseOrderController extends BaseController {
                 return "redirect:/login?error=session_expired";
             }
 
+            // Ajouter l'indicateur de page active
+            model.addAttribute("activePage", "purchase-orders");
+
             // Récupérer le fournisseur sélectionné depuis la session
             String selectedSupplier = (String) session.getAttribute("selectedSupplier");
             if (selectedSupplier == null || selectedSupplier.isEmpty()) {
