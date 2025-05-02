@@ -1,11 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style>
+        .footer {
+            background-color: var(--primary-color);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 2rem 0;
+        }
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+        .social-links a {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+        .social-links a:hover {
+            color: white;
+            transform: translateY(-3px);
+        }
+        .footer-text {
+            margin: 0;
+        }
+    </style>
+</head>
 <body>
-    <div th:fragment="footer" class="container">
-        <!-- Footer content -->
-        <footer>
-            <p class="mb-0">&copy; 2025 Your Company. All rights reserved.</p>
-        </footer>
+    <div th:fragment="footer" class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">
+                    <i class="fas fa-code"></i>
+                    &copy; 2025 Dashboard Pro. All rights reserved.
+                </p>
+                <div class="social-links">
+                    <a href="#" title="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="#" title="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="#" title="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
