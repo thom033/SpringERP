@@ -93,7 +93,7 @@ public class SupplierQuotationController extends BaseController {
 
             // Log the entire response body
             String responseBody = response.getBody();
-            System.out.println("Response Body: " + responseBody);
+            System.out.println("Response Body of Supplier Quotation: " + responseBody);
 
             // Convertir le JSON en liste d'objets SupplierQuotation
             JsonNode messageNode = objectMapper.readTree(responseBody).get("message");
@@ -121,7 +121,7 @@ public class SupplierQuotationController extends BaseController {
             }
 
             // Ajouter la liste des Supplier Quotation au modèle
-            model.addAttribute("supplierQuotations", supplierQuotations);
+            model.addAttribute("quotations", supplierQuotations);
             return "supplier_quotation"; // Retourner la vue "supplier_quotation"
 
         } catch (Exception e) {

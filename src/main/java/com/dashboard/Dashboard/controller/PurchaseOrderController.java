@@ -112,7 +112,7 @@ public class PurchaseOrderController extends BaseController {
             }
 
             // Add the list of Purchase Orders to the model
-            model.addAttribute("purchaseOrders", purchaseOrders);
+            model.addAttribute("orders", purchaseOrders);
             return "purchase_orders"; // Return the view "purchase_orders"
 
         } catch (org.springframework.web.client.HttpClientErrorException.Forbidden e) {
