@@ -12,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.ui.Model;
 import org.springframework.web.client.RestTemplate;
 
@@ -129,5 +131,48 @@ public class SupplierQuotationController extends BaseController {
             model.addAttribute("error", "Erreur lors de la récupération des données : " + e.getMessage());
             return "supplier_quotation";
         }
+    }
+
+    @PostMapping("/supplier-quotation/update-price")
+    public String updateQuotationPrice(@RequestParam("quotationId") String quotationId,
+                                        @RequestParam("newPrice") double newPrice,
+                                        Model model) {
+        try {
+            if (!hasValidSession()) {
+                return "redirect:/login?error=session_expired";
+            }
+
+            String url = "http://erpnext.localhost:8000/api/resource/Supplier Quotation/" + quotationId;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            headers.set("Cookie", "sid=" + getSid());
+
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("total", newPrice);
+
+            RestTemplate restTemplate = new RestTemplate();
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                url,
+                HttpMethod.PUT,
+                entity,
+                String.class
+            );
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                model.addAttribute("success", "Le prix a été mis à jour avec succès.");
+            } else {
+                model.addAttribute("error", "Échec de la mise à jour du prix.");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("error", "Erreur lors de la mise à jour du prix : " + e.getMessage());
+        }
+
+        return "redirect:/supplier-quotation";
     }
 }
