@@ -59,11 +59,11 @@
                                     </thead>
                                     <tbody>
                                         <tr th:each="quotation : ${quotations}">
-                                            <td th:text="${quotation.id}"></td>
+                                            <td th:text="${quotation.name}"></td>
                                             <td th:text="${quotation.supplier.name}"></td>
-                                            <td th:text="${#temporals.format(quotation.date, 'dd/MM/yyyy')}"></td>
-                                            <td th:text="${#temporals.format(quotation.validUntil, 'dd/MM/yyyy')}"></td>
-                                            <td th:text="${quotation.totalAmount}"></td>
+                                            <td th:text="${quotation.transaction_date}"></td>
+                                            <td th:text="${quotation.valid_till}"></td>
+                                            <td th:text="${quotation.total}"></td>
                                             <td th:text="${quotation.currency}"></td>
                                             <td>
                                                 <span class="badge" th:classappend="${quotation.status == 'DRAFT' ? 'bg-warning' : 
@@ -74,19 +74,14 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a th:href="@{/supplier-quotation/{id}(id=${quotation.id})}" 
+                                                    <a th:href="@{/supplier-quotation/{id}(id=${quotation.name})}" 
                                                        class="btn btn-sm btn-info">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a th:href="@{/supplier-quotation/{id}/edit(id=${quotation.id})}" 
+                                                    <a th:href="@{/supplier-quotation/{id}/edit(id=${quotation.name})}" 
                                                        class="btn btn-sm btn-warning">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <button type="button" 
-                                                            class="btn btn-sm btn-danger"
-                                                            th:onclick="'deleteQuotation(' + ${quotation.id} + ')'">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>

@@ -50,7 +50,6 @@
                                             <th><i class="fas fa-hashtag me-2"></i>Order Number</th>
                                             <th><i class="fas fa-building me-2"></i>Supplier</th>
                                             <th><i class="fas fa-calendar me-2"></i>Order Date</th>
-                                            <th><i class="fas fa-truck me-2"></i>Expected Delivery</th>
                                             <th><i class="fas fa-money-bill me-2"></i>Total Amount</th>
                                             <th><i class="fas fa-money-bill me-2"></i>Currency</th>
                                             <th><i class="fas fa-tasks me-2"></i>Status</th>
@@ -59,11 +58,10 @@
                                     </thead>
                                     <tbody>
                                         <tr th:each="order : ${orders}">
-                                            <td th:text="${order.orderNumber}"></td>
-                                            <td th:text="${order.supplier.name}"></td>
-                                            <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy')}"></td>
-                                            <td th:text="${#temporals.format(order.expectedDeliveryDate, 'dd/MM/yyyy')}"></td>
-                                            <td th:text="${order.totalAmount}"></td>
+                                            <td th:text="${order.name}"></td>
+                                            <td th:text="${order.supplier}"></td>
+                                            <td th:text="${order.transaction_date}"></td>
+                                            <td th:text="${order.total}"></td>
                                             <td th:text="${order.currency}"></td>
                                             <td>
                                                 <span class="badge" th:classappend="${order.status == 'DRAFT' ? 'bg-warning' : 
@@ -75,19 +73,14 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a th:href="@{/purchase-orders/{id}(id=${order.id})}" 
+                                                    <a th:href="@{/purchase-orders/{id}(id=${order.name})}" 
                                                        class="btn btn-sm btn-info">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a th:href="@{/purchase-orders/{id}/edit(id=${order.id})}" 
+                                                    <a th:href="@{/purchase-orders/{id}/edit(id=${order.name})}" 
                                                        class="btn btn-sm btn-warning">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <button type="button" 
-                                                            class="btn btn-sm btn-danger"
-                                                            th:onclick="'deleteOrder(' + ${order.id} + ')'">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
