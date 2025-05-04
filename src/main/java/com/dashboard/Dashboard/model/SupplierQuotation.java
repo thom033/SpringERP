@@ -33,9 +33,24 @@ public class SupplierQuotation {
     private double rounding_adjustment;
     private double rounded_total;
     private String title;
+
     @JsonProperty("supplier")
     private Supplier supplier; // Ensure this maps to the Supplier object
+
     private double base_grand_total;
     private String company;
     private String currency;
+
+    public void setTotal(double total) {
+        this.total = total;
+    }
+    public double getTotal() {
+        return total;
+    }
+    public void setNetTotal(double net_total) {
+        this.net_total = net_total;
+    }
+    public double getNetTotal() {
+        return net_total;
+    }
 }
