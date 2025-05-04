@@ -1,0 +1,157 @@
+/* Variables globales */
+:root {
+    --primary-color: #2563eb;
+    --secondary-color: #475569;
+    --success-color: #16a34a;
+    --warning-color: #ca8a04;
+    --danger-color: #dc2626;
+    --background-color: #f8fafc;
+    --text-color: #1e293b;
+    --border-color: #e2e8f0;
+}
+
+/* Style général */
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+}
+
+/* En-tête et navigation */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: white;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* Cartes */
+.card {
+    border: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+}
+
+/* Tableaux */
+.table {
+    background-color: white;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.table thead th {
+    background-color: #f8fafc;
+    border-bottom: 2px solid var(--border-color);
+    color: var(--secondary-color);
+    font-weight: 600;
+}
+
+.table tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* Badges et statuts */
+.badge {
+    padding: 0.5em 1em;
+    font-weight: 500;
+    border-radius: 9999px;
+}
+
+.badge-paid {
+    background-color: var(--success-color) !important;
+    color: white;
+}
+
+.badge-unpaid {
+    background-color: var(--danger-color) !important;
+    color: white;
+}
+
+.badge-partly {
+    background-color: var(--warning-color) !important;
+    color: white;
+}
+
+/* Boutons */
+.btn {
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+/* Formulaires */
+.form-control {
+    border-radius: 0.375rem;
+    border-color: var(--border-color);
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+}
+
+/* Alertes */
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.alert-success {
+    background-color: #dcfce7;
+    color: var(--success-color);
+}
+
+.alert-danger {
+    background-color: #fee2e2;
+    color: var(--danger-color);
+}
+
+/* Utilitaires */
+.text-muted {
+    color: var(--secondary-color) !important;
+}
+
+.amount-col {
+    text-align: right;
+    font-family: 'Roboto Mono', monospace;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
