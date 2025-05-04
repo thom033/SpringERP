@@ -11,6 +11,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpSession;
+
 @Controller
 public class LoginController {
 
@@ -27,11 +29,13 @@ public class LoginController {
     }
 
     @PostMapping("/login")
-    public String processLogin(LoginRequest loginRequest, Model model, HttpServletResponse response) {
+    public String processLogin(LoginRequest loginRequest, Model model, HttpServletResponse response, HttpSession session) {
         try {
             LoginResponse loginResponse = authService.login(loginRequest);
             
             if (loginResponse.getSid() != null) {
+                session.setAttribute("sid", loginResponse.getSid());
+
                 response.addHeader(HttpHeaders.SET_COOKIE, 
                     CookieUtil.createCookie("sid", loginResponse.getSid()).toString());
             }

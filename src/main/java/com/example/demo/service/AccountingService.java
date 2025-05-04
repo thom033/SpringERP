@@ -176,7 +176,7 @@ public class AccountingService {
         data.put("party_type", "Supplier");
         data.put("party", invoice.getSupplier());
         data.put("party_name", invoice.getSupplier_name());
-        data.put("company", "Soa company");
+        data.put("company", "Bureau International de Consultance en Informatique");
         
         // Le compte paid_to devrait être le même que credit_to de la facture
         data.put("paid_to", invoice.getCredit_to());  // Utiliser le même compte que la facture
