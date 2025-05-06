@@ -1,7 +1,30 @@
+/* Variables globales */
+:root {
+    --primary-color: #3b82f6;
+    --primary-hover: #2563eb;
+    --background-color: #f1f5f9;
+    --text-color: #0f172a;
+    --border-color: #e2e8f0;
+    --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --transition-speed: 0.2s;
+}
+
+body {
+    background-color: var(--background-color);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .card {
     border: none;
-    border-radius: 10px;
+    border-radius: 1rem;
     background: white;
+    box-shadow: var(--card-shadow);
+    width: 100%;
+    max-width: 400px;
+    margin: 1rem;
 }
 
 .card-body {
@@ -9,51 +32,71 @@
 }
 
 .form-control {
-    border-radius: 5px;
-    padding: 12px;
-    border: 1px solid #ced4da;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    font-size: 0.875rem;
+    transition: all var(--transition-speed) ease-in-out;
 }
 
 .form-control:focus {
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-    border-color: #80bdff;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .btn-primary {
-    padding: 12px;
+    padding: 0.75rem 1.5rem;
     font-weight: 500;
-    background-color: #0d6efd;
+    background-color: var(--primary-color);
     border: none;
-    transition: all 0.3s ease;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    letter-spacing: 0.025em;
+    transition: all var(--transition-speed) ease-in-out;
 }
 
 .btn-primary:hover {
-    background-color: #0b5ed7;
+    background-color: var(--primary-hover);
     transform: translateY(-1px);
 }
 
 .alert {
-    border-radius: 5px;
-    font-size: 0.9rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
 }
 
 .form-label {
     font-weight: 500;
-    color: #495057;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
 }
 
 /* Animation pour le chargement de la page */
 .card {
-    animation: fadeIn 0.5s ease;
+    animation: fadeIn 0.5s ease-out;
 }
 
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(-20px);
+        transform: translateY(20px);
     }
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    
+    .card {
+        margin: 0.5rem;
     }
 }
