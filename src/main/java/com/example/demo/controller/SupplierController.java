@@ -7,6 +7,9 @@ import com.example.demo.dto.UpdatePriceRequest;
 import com.example.demo.service.PurchaseOrderService;
 import com.example.demo.service.QuotationService;
 import com.example.demo.service.SupplierService;
+
+import jakarta.servlet.http.HttpSession;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -93,12 +96,31 @@ public class SupplierController {
         return "redirect:/suppliers/" + supplierId + "/quotations/" + quotationId + "/details";
     }
 
+    @PostMapping("/{supplierId}/quotations/{quotationId}/submit")
+    public String submitQuotation(
+            @CookieValue(name = "sid", required = true) String sid,
+            @PathVariable String supplierId,
+            @PathVariable String quotationId,
+            RedirectAttributes redirectAttributes) {
+        try {
+            quotationService.submitQuotation(sid, quotationId);
+            redirectAttributes.addFlashAttribute("success", "Devis soumis avec succès");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la soumission du devis: " + e.getMessage());
+        }
+        return "redirect:/suppliers/" + supplierId + "/quotations/" + quotationId + "/details";
+    }
+
     @GetMapping("/{supplierId}/orders")
     public String listSupplierOrders(
             @CookieValue(name = "sid", required = true) String sid,
             @PathVariable String supplierId,
             Model model) {
+
+        int color_switch = 100;
+
         List<PurchaseOrderDTO> orders = purchaseOrderService.getSupplierOrders(sid, supplierId);
+        model.addAttribute("color_switch", color_switch);
         model.addAttribute("orders", orders);
         model.addAttribute("supplierId", supplierId);
         return "suppliers/orders";
