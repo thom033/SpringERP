@@ -4,7 +4,7 @@
     <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-white">
         <div class="container">
             <a class="navbar-brand" href="/dashboard">
-                <span class="text-primary fw-bold">ERP</span>System
+                <span class="text-primary fw-bold">ERP</span>Spring
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -22,8 +22,6 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" th:href="@{/suppliers}">Liste des fournisseurs</a></li>
-                            <li><a class="dropdown-item" th:href="@{/suppliers/quotations}">Devis</a></li>
-                            <li><a class="dropdown-item" th:href="@{/suppliers/orders}">Commandes</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
@@ -32,7 +30,6 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" th:href="@{/accounting/invoices}">Factures</a></li>
-                            <li><a class="dropdown-item" th:href="@{/accounting/payments}">Paiements</a></li>
                         </ul>
                     </li>
                 </ul>
