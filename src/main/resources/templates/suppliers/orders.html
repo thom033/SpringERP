@@ -33,7 +33,9 @@
                         <td th:text="${order.name}"></td>
                         <td th:text="${order.transaction_date}"></td>
                         <td>
-                            <span th:text="${order.total}"></span>
+                            <span th:if="${order.total < color_switch}" th:style="'color: red;'" th:text="${order.total}"></span>
+                            <span th:if="${order.total >= color_switch}" th:style="'color: green;'" th:text="${order.total}"></span>
+
                             <small th:text="${order.currency}"></small>
                         </td>
                         <td>
