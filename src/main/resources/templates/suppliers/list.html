@@ -8,10 +8,18 @@
 <body>
     <!-- Inclure la navbar -->
     <div th:replace="fragments/navbar :: navbar"></div>
+
+    <div class="container mt-4">
+        <h1>Liste des Fournisseurs</h1>
+        <div th:if="${param.error}" class="alert alert-danger" role="alert">
+            <p th:text="${param.error}"></p>
+        </div>
+        <div th:if="${param.success}" class="alert alert-success" role="alert">
+            <p th:text="${param.success}"></p>
+        </div>
+    </div>
     
     <div class="container mt-4">
-        <h2>Liste des Fournisseurs</h2>
-        
         <div class="table-responsive">
             <table class="table table-striped table-hover">
                 <thead>

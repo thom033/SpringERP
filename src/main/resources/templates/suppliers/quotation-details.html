@@ -24,6 +24,11 @@
             <div>
                 <a th:href="@{/suppliers/{supplierId}/quotations(supplierId=${supplierId})}" 
                    class="btn btn-secondary">Retour</a>
+                <form th:if="${quotation.status == 'Draft'}"
+                      th:action="@{/suppliers/{supplierId}/quotations/{quotationId}/submit(supplierId=${supplierId},quotationId=${quotation.name})}" 
+                      method="post" class="d-inline">
+                    <button type="submit" class="btn btn-success">Soumettre</button>
+                </form>
             </div>
         </div>
 

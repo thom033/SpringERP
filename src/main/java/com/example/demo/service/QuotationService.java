@@ -140,6 +140,27 @@ public class QuotationService {
         );
     }
 
+    public void submitQuotation(String sid, String quotationId) {
+        // Mettre à jour le statut de la quotation à "Submitted"
+        String updateStatusUrl = baseUrl + "/api/resource/Supplier Quotation/" + quotationId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        
+        Map<String, Object> statusData = new HashMap<>();
+        statusData.put("status", "Submitted");
+        
+        HttpEntity<Map<String, Object>> statusEntity = new HttpEntity<>(statusData, headers);
+        
+        restTemplate.exchange(
+            updateStatusUrl,
+            HttpMethod.PUT,
+            statusEntity,
+            JsonNode.class
+        );
+    }
+
     public void cancelQuotation(String sid, String quotationId) {
         String url = baseUrl + "/api/method/frappe.client.cancel";
         
