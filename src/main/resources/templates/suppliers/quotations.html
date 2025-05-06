@@ -4,6 +4,9 @@
     <title>Devis Fournisseur</title>
     <meta charset="UTF-8">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
 </head>
 <body>
     <!-- Inclure la navbar -->
@@ -11,34 +14,57 @@
     
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Devis du Fournisseur</h2>
-            <a href="/suppliers" class="btn btn-secondary">Retour</a>
+            <div>
+                <h2 class="mb-1">Devis du Fournisseur</h2>
+                <p class="text-muted mb-0">Gérez les devis de vos fournisseurs</p>
+            </div>
+            <a href="/suppliers" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>
+                Retour
+            </a>
         </div>
         
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>N° Devis</th>
-                        <th>Date</th>
-                        <th>Statut</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="quotation : ${quotations}">
-                        <td th:text="${quotation.name}"></td>
-                        <td th:text="${quotation.transaction_date}"></td>
-                        <td th:text="${quotation.status}"></td>
-                        <td>
-                            <a th:href="@{/suppliers/{supplierId}/quotations/{quotationId}/details(supplierId=${supplierId},quotationId=${quotation.name})}" 
-                               class="btn btn-primary btn-sm">
-                                Voir détails
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>N° Devis</th>
+                                <th>Date</th>
+                                <th>Statut</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="quotation : ${quotations}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-file-text me-2 text-primary"></i>
+                                        <span th:text="${quotation.name}"></span>
+                                    </div>
+                                </td>
+                                <td th:text="${quotation.transaction_date}"></td>
+                                <td>
+                                    <span class="badge" 
+                                          th:classappend="${quotation.status == 'Draft' ? 'bg-warning' : 
+                                                         quotation.status == 'Submitted' ? 'bg-info' : 
+                                                         quotation.status == 'Accepted' ? 'bg-success' : 'bg-secondary'}"
+                                          th:text="${quotation.status}">
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a th:href="@{/suppliers/{supplierId}/quotations/{quotationId}/details(supplierId=${supplierId},quotationId=${quotation.name})}" 
+                                       class="btn btn-primary btn-sm">
+                                        <i class="bi bi-eye me-1"></i>
+                                        Voir détails
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
