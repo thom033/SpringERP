@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ERPNext Integration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .json-response {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 20px;
+            font-family: monospace;
+        }
+        .success-badge {
+            font-size: 0.8rem;
+            padding: 0.4em 0.8em;
+        }
+        .cookie-info {
+            word-break: break-all;
+            background: #e9ecef;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container mt-4">
+        <h2>Menu Principal</h2>
+        <div class="list-group">
+            <a href="/suppliers" class="list-group-item list-group-item-action">
+                Gérer les Fournisseurs
+            </a>
+            <a href="/accounting/invoices" class="list-group-item list-group-item-action">
+                Gérer les Factures
+            </a>
+        </div>
+    </div>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="card-title">Connection Status</h2>
+                            <span class="badge bg-success success-badge">Connected</span>
+                        </div>
+
+                        <div class="alert alert-success" role="alert">
+                            <strong>Welcome, </strong>
+                            <span th:text="${username}">username</span>!
+                        </div>
+
+                        <h5 class="mb-3">Session Information:</h5>
+                        <div class="json-response">
+                            <div class="mb-2">
+                                <strong>SID: </strong>
+                                <div class="cookie-info" th:text="${loginResponse.sid}">sid</div>
+                            </div>
+                            <div class="mb-2">
+                                <strong>User ID: </strong>
+                                <div class="cookie-info" th:text="${loginResponse.userId}">user_id</div>
+                            </div>
+                            <div class="mb-2">
+                                <strong>User Language: </strong>
+                                <div class="cookie-info" th:text="${loginResponse.userLang}">user_lang</div>
+                            </div>
+                            <div class="mb-2">
+                                <strong>System User: </strong>
+                                <div class="cookie-info" th:text="${loginResponse.systemUser}">system_user</div>
+                            </div>
+                        </div>
+
+                        <h5 class="mt-4 mb-3">Connection Details:</h5>
+                        <div class="json-response">
+                            <div class="mb-2">
+                                <strong>Message: </strong>
+                                <span th:text="${loginResponse.message}">message</span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Full Name: </strong>
+                                <span th:text="${loginResponse.fullName}">full name</span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Home Page: </strong>
+                                <span th:text="${loginResponse.homePage}">home page</span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="/login" class="btn btn-secondary me-md-2">Logout</a>
+                            <a th:href="${@environment.getProperty('erpnext.base-url') + '/login'}" class="btn btn-primary">Go to ERPNext</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Fonction pour vérifier l'authentification
+        function checkAuth() {
+            fetch('/check-auth')
+                .then(response => response.json())
+                .then(isAuthenticated => {
+                    if (!isAuthenticated) {
+                        window.location.href = '/login';
+                    }
+                });
+        }
+    
+        // Vérifier l'authentification toutes les 5 minutes
+        setInterval(checkAuth, 300000);
+    </script>
+</body>
+</html>
