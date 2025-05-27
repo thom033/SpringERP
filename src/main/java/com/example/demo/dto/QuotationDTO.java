@@ -12,6 +12,8 @@ public class QuotationDTO {
     private String status;
     private Double total;          
     private String currency;       
-    private String valid_till;     
+    private String valid_till;   
+    private String company;
+    private Double total_qty;
     private List<QuotationItemDTO> items;
 }

@@ -54,7 +54,7 @@ public class LoginController {
 
             model.addAttribute("loginResponse", loginResponse);
             model.addAttribute("username", loginRequest.getUsr());
-            return "dashboard";
+            return "suppliers/list";
         } catch (Exception e) {
             model.addAttribute("error", "Invalid credentials");
             return "login";

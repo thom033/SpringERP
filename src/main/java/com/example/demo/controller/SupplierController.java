@@ -6,9 +6,8 @@ import com.example.demo.dto.SupplierDTO;
 import com.example.demo.dto.UpdatePriceRequest;
 import com.example.demo.service.PurchaseOrderService;
 import com.example.demo.service.QuotationService;
+import com.example.demo.service.SupplService;
 import com.example.demo.service.SupplierService;
-
-import jakarta.servlet.http.HttpSession;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -23,13 +22,15 @@ import java.util.List;
 public class SupplierController {
     
     private final SupplierService supplierService;
+    private final SupplService suppl;
     private final QuotationService quotationService;
     private final PurchaseOrderService purchaseOrderService;
 
-    public SupplierController(SupplierService supplierService, QuotationService quotationService, PurchaseOrderService purchaseOrderService) {
+    public SupplierController(SupplierService supplierService, QuotationService quotationService, PurchaseOrderService purchaseOrderService, SupplService suppl) {
         this.purchaseOrderService = purchaseOrderService;
         this.quotationService = quotationService;
         this.supplierService = supplierService;
+        this.suppl = suppl;
     }
 
 
@@ -137,4 +138,48 @@ public class SupplierController {
         model.addAttribute("supplierId", supplierId);
         return "suppliers/order-details";
     }
+
+    @GetMapping("/new_quotation")
+    public String newQuotation(
+            @CookieValue(name = "sid", required = true) String sid,
+            Model model) {
+        List<String> itemList = suppl.getItems(sid);
+        List<String> warehouseList = suppl.getWarehouses(sid);
+
+        model.addAttribute("itemList", itemList);
+        model.addAttribute("warehouseList", warehouseList);
+        return "suppliers/new-quotation";
+    }
+
+    // @PostMapping("/new_quotation")
+    // public String newQuotation(
+    //         @CookieValue(name = "sid", required = true) String sid,
+    //         @RequestParam LocalDate date_quot,
+    //         @RequestParam LocalDate req_by,
+    //         @RequestParam String item_name,
+    //         @RequestParam int qtt,
+    //         @RequestParam String warehouse,
+    //         @RequestParam String purpose,
+    //         Model model) {
+    //     List<String> itemList = suppl.getItems(sid);
+    //     List<String> warehouseList = suppl.getWarehouses(sid);
+
+    //     Double qty = qtt;
+
+    //     QuotationItemDTO item = new QuotationItemDTO();
+    //     item.setName(item_name);
+    //     item.setItemName(item_name);
+    //     item.setQty(qty);
+
+    //     List<QuotationItemDTO> items = new ArrayList<>();
+    //     items.add(null);
+
+    //     QuotationDTO quotation = new QuotationDTO();
+    //     quotation.setTransaction_date(date_quot);
+    //     quotation.set
+
+    //     model.addAttribute("itemList", itemList);
+    //     model.addAttribute("warehouseList", warehouseList);
+    //     return "suppliers/new-quotation";
+    // }
 }

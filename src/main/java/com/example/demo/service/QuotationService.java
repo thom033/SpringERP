@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -54,7 +55,15 @@ public class QuotationService {
                 dto.setTransaction_date(getTextValue(quotation, "transaction_date"));
                 dto.setSupplier(supplierId);
                 dto.setSupplier_name(getTextValue(quotation, "supplier_name"));
-                dto.setStatus(getTextValue(quotation, "status"));
+                dto.setStatus(getTextValue(quotation, "status"));   
+
+                if (dto.getStatus().equals("Cancelled")) {
+                    JsonNode amendedFrom = quotation.get("amended_from");
+                    if (amendedFrom != null && !amendedFrom.isNull() && !amendedFrom.asText().isEmpty()) {
+                        dto.setStatus("Draft");
+                    }
+                }
+
                 quotations.add(dto);
             }
         }
@@ -108,6 +117,12 @@ public class QuotationService {
                     items.add(itemDTO);
                 }
             }
+
+            if (quotation.getStatus().equals("Cancelled")) {
+                if (data.has("amended_from")) {
+                    quotation.setStatus("Draft");
+                }
+            }
             quotation.setItems(items);
         }
         
@@ -141,43 +156,47 @@ public class QuotationService {
     }
 
     public void submitQuotation(String sid, String quotationId) {
-        // Mettre à jour le statut de la quotation à "Submitted"
-        String updateStatusUrl = baseUrl + "/api/resource/Supplier Quotation/" + quotationId;
-
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", "sid=" + sid);
         headers.setContentType(MediaType.APPLICATION_JSON);
-        
-        Map<String, Object> statusData = new HashMap<>();
-        statusData.put("status", "Submitted");
-        
-        HttpEntity<Map<String, Object>> statusEntity = new HttpEntity<>(statusData, headers);
+
+        // Soumettre le devis
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+            baseUrl + "/api/resource/Supplier Quotation/" + quotationId,
+            HttpMethod.GET,
+            new HttpEntity<>(headers),
+            JsonNode.class
+        );
+
+        Map<String, Object> submitData = new HashMap<>();
+        submitData.put("doctype", "Supplier Quotation");
+        submitData.put("doc", response.getBody().get("data").toString());
+
+        HttpEntity<Map<String, Object>> submitEntity = new HttpEntity<>(submitData, headers);
         
         restTemplate.exchange(
-            updateStatusUrl,
-            HttpMethod.PUT,
-            statusEntity,
+            baseUrl + "/api/method/frappe.client.submit",
+            HttpMethod.POST,
+            submitEntity,
             JsonNode.class
         );
     }
 
     public void cancelQuotation(String sid, String quotationId) {
-        String url = baseUrl + "/api/method/frappe.client.cancel";
-        
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", "sid=" + sid);
         headers.setContentType(MediaType.APPLICATION_JSON);
-        
-        Map<String, Object> data = new HashMap<>();
-        data.put("doctype", "Supplier Quotation");
-        data.put("name", quotationId);
-        
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(data, headers);
+
+        Map<String, Object> submitData = new HashMap<>();
+        submitData.put("doctype", "Supplier Quotation");
+        submitData.put("name", quotationId);
+
+        HttpEntity<Map<String, Object>> submitEntity = new HttpEntity<>(submitData, headers);
         
         restTemplate.exchange(
-            url,
+            baseUrl + "/api/method/frappe.client.cancel",
             HttpMethod.POST,
-            entity,
+            submitEntity,
             JsonNode.class
         );
     }
@@ -190,42 +209,76 @@ public class QuotationService {
         return node.has(fieldName) ? node.get(fieldName).asDouble() : null;
     }
 
-    public List<QuotationDTO> getRecentQuotations(String sid, int limit) {
-        String url = baseUrl + "/api/resource/Supplier Quotation?fields=[" +
-                    "\"name\",\"transaction_date\",\"supplier\",\"supplier_name\"," +
-                    "\"status\",\"total\"]" +
-                    "&limit=" + limit +
-                    "&order_by=transaction_date desc";
+	public void save(String sid, QuotationDTO quotation) {
+        String url =  baseUrl + "/api/resource/Supplier Quotation";
         
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", "sid=" + sid);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        headers.setContentType(MediaType.APPLICATION_JSON);
         
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+        Map<String, Object> data = new HashMap<>();
+        data.put("naming_series", "PUR-SQTN-.YYYY.-");
+        data.put("docstatus", "0");
+        data.put("transaction_date", quotation.getTransaction_date());
+        data.put("valid_till", quotation.getValid_till());
+        data.put("supplier", quotation.getSupplier());
+        data.put("status", "Draft");
+        data.put("currency", quotation.getCurrency());
+        data.put("company", quotation.getCompany());
+
+        // Gestion des items
+        List<Map<String, Object>> itemsList = new ArrayList<>();
         
-        ResponseEntity<JsonNode> response = restTemplate.exchange(
-            url,
-            HttpMethod.GET,
-            entity,
-            JsonNode.class
-        );
-    
-        List<QuotationDTO> quotations = new ArrayList<>();
-        
-        if (response.getBody() != null && response.getBody().has("data")) {
-            JsonNode data = response.getBody().get("data");
-            for (JsonNode quotation : data) {
-                QuotationDTO dto = new QuotationDTO();
-                dto.setName(getTextValue(quotation, "name"));
-                dto.setTransaction_date(getTextValue(quotation, "transaction_date"));
-                dto.setSupplier(getTextValue(quotation, "supplier"));
-                dto.setSupplier_name(getTextValue(quotation, "supplier_name"));
-                dto.setStatus(getTextValue(quotation, "status"));
-                dto.setTotal(getDoubleValue(quotation, "total"));
-                quotations.add(dto);
-            }
+        for (QuotationItemDTO item : quotation.getItems()) {
+            Map<String, Object> itemMap = new HashMap<>();
+            itemMap.put("item_code", item.getItem_name());
+            itemMap.put("qty", item.getQty());
+            itemMap.put("stock_uom", "Unit");
+            itemMap.put("uom", "Unit");
+            itemMap.put("conversion_factor", 1);
+            itemMap.put("base_rate", item.getRate());
+            itemMap.put("rate", item.getRate());
+            itemMap.put("amount", item.getRate() * item.getQty());
+            itemMap.put("base_amount", item.getRate() * item.getQty());
+            itemMap.put("warehouse", item.getWarehouse());
+
+            System.out.println("Item : " + item.getItem_name());
+            
+            itemsList.add(itemMap);
         }
         
-        return quotations;
+        data.put("items", itemsList);
+        
+        // Calcul du total
+        Double total = quotation.getItems().stream()
+                .mapToDouble(item -> item.getRate() * item.getQty())
+                .sum();
+
+		Double total_qty = quotation.getItems().stream()
+                .mapToDouble(item -> item.getQty())
+                .sum();
+        
+        data.put("base_total", total);
+        data.put("total", total);
+        data.put("total_qty", total_qty);
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(data, headers);
+        
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                JsonNode.class
+            );
+            
+            // Vous pourriez logger la réponse ou vérifier le status code
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("Erreur lors de la création du devis: " + 
+                    response.getBody().toString());
+            }
+        } catch (RestClientException e) {
+            throw new RuntimeException("Erreur lors de l'appel à l'API ERPNext", e);
+        }
     }
 }

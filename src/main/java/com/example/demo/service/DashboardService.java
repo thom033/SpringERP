@@ -59,9 +59,9 @@ public class DashboardService {
         dashboardData.put("suppliersCount", suppliersCount);
     
         // Récupérer les derniers devis
-        List<QuotationDTO> recentQuotations = quotationService.getRecentQuotations(sid, 5);
-        System.out.println("Recent Quotations: " + recentQuotations.size());
-        dashboardData.put("recentQuotations", recentQuotations);
+        // List<QuotationDTO> recentQuotations = quotationService.getRecentQuotations(sid, 5);
+        // System.out.println("Recent Quotations: " + recentQuotations.size());
+        // dashboardData.put("recentQuotations", recentQuotations);
     
         // Récupérer les dernières factures
         List<InvoiceDTO> recentInvoices = accountingService.getRecentInvoices(sid, 5);
