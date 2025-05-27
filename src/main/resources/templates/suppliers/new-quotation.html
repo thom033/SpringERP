@@ -10,10 +10,8 @@
 </head>
 <body>
     <!-- Inclure la navbar -->
-    <div th:replace="fragments/navbar :: navbar"></div>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
 
-    
-    
     <div class="container mt-4">
 
         <form th:action="@{suppliers/new_quotation}" method="post">                        
