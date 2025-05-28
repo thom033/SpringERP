@@ -18,6 +18,12 @@
                             <span>Warehouse</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center" th:href="@{/stock}">
+                            <i class="bi bi-speedometer2 me-2"></i>
+                            <span>Stock</span>
+                        </a>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-people me-2"></i>
@@ -42,6 +48,20 @@
                                 <a class="dropdown-item d-flex align-items-center" th:href="@{/accounting/invoices}">
                                     <i class="bi bi-receipt me-2 text-primary"></i>
                                     Factures
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-cash-coin me-2"></i>
+                            <span>CSV</span>
+                        </a>
+                        <ul class="dropdown-menu shadow-sm">
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center" th:href="@{/accounting/invoices}">
+                                    <i class="bi bi-receipt me-2 text-primary"></i>
+                                    Eval 2
                                 </a>
                             </li>
                         </ul>
