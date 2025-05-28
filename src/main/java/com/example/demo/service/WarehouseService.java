@@ -33,7 +33,7 @@ public class WarehouseService {
         String fields = "[\"name\" , \"company\"]";
         String filter = "[]";
 
-        String url = baseUrl + "/api/resource/" + doctype + "?fields" + fields + "&filters=" + filter;
+        String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter;
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", "sid=" + sid);

@@ -22,8 +22,6 @@ import com.example.demo.service.QuotationService;
 import com.example.demo.service.SupplierService;
 import com.example.demo.service.WarehouseService;
 
-import jakarta.servlet.http.HttpSession;
-
 @Controller
 @RequestMapping("/devis")
 public class QuotationController {
@@ -41,8 +39,7 @@ public class QuotationController {
 
     @GetMapping("/form")
     public String getSavePage(
-        Model model, 
-        HttpSession session, RedirectAttributes redirectAttributes, 
+        Model model,
         @CookieValue(name = "sid", required = true) String sid){
 
         model.addAttribute("pageTitle", "Formulaire de Devis");

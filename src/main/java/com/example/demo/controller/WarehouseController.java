@@ -23,7 +23,7 @@ public class WarehouseController {
 
     @GetMapping
     public String formWarehouse(){
-        return "warehouse/warehouse";
+        return "warehouse/warehouse-form.html";
     }
 
     @PostMapping
