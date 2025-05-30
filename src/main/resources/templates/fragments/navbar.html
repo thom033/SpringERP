@@ -1,17 +1,33 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-white">
+    <nav th:fragment="navbar(activeApp)" class="navbar navbar-expand-lg navbar-light bg-white">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="#">
-                <i class="bi bi-building me-2 text-primary"></i>
-                <span class="text-primary fw-bold">ERP</span>Spring
-            </a>
+            <!-- Dropdown pour basculer entre ERP et RH -->
+            <div class="dropdown">
+                <a class="navbar-brand dropdown-toggle d-flex align-items-center" href="#" id="appDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi" th:classappend="${activeApp == 'rh'} ? 'bi-people-fill text-success' : 'bi-building text-primary'"></i>
+                    <span class="fw-bold ms-2" th:text="${activeApp == 'rh'} ? 'RH Spring' : 'ERP Spring'">ERP Spring</span>
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="appDropdown">
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center" th:href="@{/suppliers}" th:if="${activeApp != 'erp'}">
+                            <i class="bi bi-building me-2 text-primary"></i> ERP Spring
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center" th:href="@{/rh}" th:if="${activeApp != 'rh'}">
+                            <i class="bi bi-people-fill me-2 text-success"></i> RH Spring
+                        </a>
+                    </li>
+                </ul>
+            </div>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+                <!-- Menu ERP -->
+                <ul class="navbar-nav me-auto" th:if="${activeApp == null or activeApp == 'erp'}">
                     <li class="nav-item">
                         <a class="nav-link d-flex align-items-center" th:href="@{/warehouse}">
                             <i class="bi bi-speedometer2 me-2"></i>
@@ -66,6 +82,28 @@
                             </li>
                         </ul>
                     </li>
+                </ul>
+                <!-- Menu RH -->
+                <ul class="navbar-nav me-auto" th:if="${activeApp == 'rh'}">
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center" th:href="@{/rh/dashboard}">
+                            <i class="bi bi-house-door me-2"></i>
+                            <span>Accueil RH</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center" th:href="@{/rh/employees}">
+                            <i class="bi bi-person-badge me-2"></i>
+                            <span>Employés</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center" th:href="@{/rh/paie}">
+                            <i class="bi bi-cash-stack me-2"></i>
+                            <span>Paie</span>
+                        </a>
+                    </li>
+                    <!-- Ajoute d'autres liens RH ici -->
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
