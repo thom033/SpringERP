@@ -16,7 +16,7 @@
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item d-flex align-items-center" th:href="@{/rh}" th:if="${activeApp != 'rh'}">
+                        <a class="dropdown-item d-flex align-items-center" th:href="@{/employee}" th:if="${activeApp != 'rh'}">
                             <i class="bi bi-people-fill me-2 text-success"></i> RH Spring
                         </a>
                     </li>
@@ -86,19 +86,19 @@
                 <!-- Menu RH -->
                 <ul class="navbar-nav me-auto" th:if="${activeApp == 'rh'}">
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center" th:href="@{/rh/dashboard}">
+                        <a class="nav-link d-flex align-items-center" th:href="@{/employee}">
                             <i class="bi bi-house-door me-2"></i>
                             <span>Accueil RH</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center" th:href="@{/rh/employees}">
+                        <a class="nav-link d-flex align-items-center" th:href="@{/employee}">
                             <i class="bi bi-person-badge me-2"></i>
                             <span>Employés</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center" th:href="@{/rh/paie}">
+                        <a class="nav-link d-flex align-items-center" th:href="@{/employee}">
                             <i class="bi bi-cash-stack me-2"></i>
                             <span>Paie</span>
                         </a>
