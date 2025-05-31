@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <style>
+        body { font-family: "Arial", sans-serif; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+        h2 { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Fiche de paie : <span th:text="${salary.name}"></span></h1>
+    <p><strong>Employé :</strong> <span th:text="${salary.employee_name}"></span> (<span th:text="${salary.employee}"></span>)</p>
+    <p><strong>Entreprise :</strong> <span th:text="${salary.company}"></span></p>
+    <p><strong>Date :</strong> <span th:text="${salary.posting_date}"></span></p>
+
+    <h2>Détails du Salaire</h2>
+    <table>
+        <tr><th>Brut</th><td th:text="${salary.gross_pay}"></td></tr>
+        <tr><th>Net</th><td th:text="${salary.net_pay}"></td></tr>
+        <tr><th>Déductions</th><td th:text="${salary.total_deduction}"></td></tr>
+    </table>
+
+    <h2>Gains</h2>
+    <table>
+        <thead><tr><th>Composant</th><th>Montant</th></tr></thead>
+        <tbody th:each="e : ${salary.earnings}">
+            <tr>
+                <td th:text="${e.salary_component}"></td>
+                <td th:text="${e.amount}"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Déductions</h2>
+    <table>
+        <thead><tr><th>Composant</th><th>Montant</th></tr></thead>
+        <tbody th:each="d : ${salary.deductions}">
+            <tr>
+                <td th:text="${d.salary_component}"></td>
+                <td th:text="${d.amount}"></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

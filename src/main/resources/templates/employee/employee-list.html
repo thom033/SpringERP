@@ -32,6 +32,7 @@
                                 <th>Date of joining</th>
                                 <th>Status</th>
                                 <th>Company</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -42,6 +43,11 @@
                                 <td th:text="${employee.date_of_joining}"></td>
                                 <td th:text="${employee.status}"></td> 
                                 <td th:text="${employee.company}"></td> 
+                                <td>
+                                    <a th:href="@{/salary/{id}(id=${employee.name})}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-eye"></i> Voir détail
+                                    </a>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
