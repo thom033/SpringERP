@@ -30,7 +30,7 @@ public class EmployeeService {
 
     public List<EmployeeDTO> getEmployee(String sid) throws Exception{
         String doctype = "Employee";
-        String fields = "[\"first_name\" , \"gender\" , \"date_of_birth\" , \"date_of_joining\" , \"status\" , \"company\"]";
+        String fields = "[\"*\"]";
         String filter = "[]";
 
         String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter;
@@ -54,6 +54,7 @@ public class EmployeeService {
             JsonNode data = response.getBody().get("data");
             for (JsonNode employee : data) {
                 EmployeeDTO dto = new EmployeeDTO();
+                dto.setName(getTextValue(employee, "name"));
                 dto.setFirst_name(getTextValue(employee, "first_name"));
                 dto.setGender(getTextValue(employee, "gender"));
                 dto.setDate_of_birth(LocalDate.parse(getTextValue(employee, "date_of_birth")));
@@ -71,6 +72,48 @@ public class EmployeeService {
         }
         
         return employees;
+    }
+
+    public EmployeeDTO getEmployeeByName(String sid, String employeeName){
+        EmployeeDTO employee = new EmployeeDTO();
+        try {
+            String url = baseUrl + "/api/resource/Employee/" + employeeName;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Cookie", "sid=" + sid);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                JsonNode.class
+            );
+    
+            if (response.getBody() != null && response.getBody().has("data")) {
+                JsonNode data = response.getBody().get("data");
+    
+                employee.setName(getTextValue(data, "name"));
+                employee.setFirst_name(getTextValue(data, "first_name"));
+                employee.setGender(getTextValue(data, "gender"));
+                employee.setDate_of_birth(LocalDate.parse(getTextValue(data, "date_of_birth")));
+                employee.setDate_of_joining(LocalDate.parse(getTextValue(data, "date_of_joining")));
+                employee.setStatus(getTextValue(data, "status"));
+                employee.setCompany(getTextValue(data, "company"));
+            }
+            
+
+            System.out.println("Employé récupéré by name :");
+            System.out.println(employee);
+
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des Salary Slip : " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return employee;
     }
 
     private String getTextValue(JsonNode node, String fieldName) {
