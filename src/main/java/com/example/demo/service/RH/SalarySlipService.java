@@ -66,7 +66,7 @@ public class SalarySlipService {
                     dto.setPayment_days(Double.parseDouble(getTextValue(salary, "payment_days")));
                     dto.setNet_pay(Double.parseDouble(getTextValue(salary, "net_pay")));
                     dto.setTotal_earnings(Double.parseDouble(getTextValue(salary, "total_earnings")));
-
+                    dto.setTotal_deduction(Double.parseDouble(getTextValue(salary, "total_deduction")));
                     dto.setGross_pay(Double.parseDouble(getTextValue(salary, "gross_pay")));
 
                     salarys.add(dto);
@@ -84,6 +84,17 @@ public class SalarySlipService {
         return salarys;
     }
 
+    public List<SalarySlipDTO> getSalarySlipByMonth(String sid,List<SalarySlipDTO> list, int month, int annee){
+        List<SalarySlipDTO> val = new ArrayList<>();
+        for (SalarySlipDTO salarySlipDTO : list) {
+            int salaryMonth = salarySlipDTO.getPosting_date().getMonthValue();
+            int salaryYear = salarySlipDTO.getPosting_date().getYear();
+            if (salaryMonth == month && salaryYear == annee) {
+                val.add(salarySlipDTO);
+            }
+        }
+        return val;
+    }
     public List<SalarySlipDTO> getSalarySlip(String sid,String Employee){
         List<SalarySlipDTO> salarys = new ArrayList<>();
         try {
@@ -122,6 +133,8 @@ public class SalarySlipService {
                     dto.setPayment_days(Double.parseDouble(getTextValue(salary, "payment_days")));
                     dto.setNet_pay(Double.parseDouble(getTextValue(salary, "net_pay")));
                     dto.setTotal_earnings(Double.parseDouble(getTextValue(salary, "total_earnings")));
+                    dto.setTotal_deduction(Double.parseDouble(getTextValue(salary, "total_deduction")));
+                    dto.setGross_pay(Double.parseDouble(getTextValue(salary, "gross_pay")));
 
                     salarys.add(dto);
                 }

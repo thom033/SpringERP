@@ -9,7 +9,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.xhtmlrenderer.pdf.ITextRenderer;
@@ -35,7 +37,7 @@ public class SalarySlipController {
 
 
     @GetMapping("/{EmployeeId}")
-    public String showSalarySlip(
+    public String showSalarySlipByEmployee(
         @CookieValue(name = "sid", required = true) String sid,
         @PathVariable String EmployeeId,
         Model model
@@ -105,4 +107,28 @@ public class SalarySlipController {
         outputStream.close();
     }
 
+    @GetMapping("/all")
+    public String showSalarySlip(
+        @CookieValue(name = "sid", required = true) String sid,
+        Model model
+    ){
+        List<SalarySlipDTO> salarys = salarySlipService.getSalarySlip(sid);
+
+        model.addAttribute("salarys", salarys);
+        return "salary/salary-all";
+    }
+
+    @PostMapping("/all")
+    public String showSalarySlipMonth(
+        @CookieValue(name = "sid", required = true) String sid,
+        @RequestParam int mois,
+        @RequestParam int annee,
+        Model model
+    ){
+        List<SalarySlipDTO> salarys = salarySlipService.getSalarySlip(sid);
+        salarys = salarySlipService.getSalarySlipByMonth(sid, salarys, mois, annee);
+
+        model.addAttribute("salarys", salarys);
+        return "salary/salary-all";
+    }
 }
