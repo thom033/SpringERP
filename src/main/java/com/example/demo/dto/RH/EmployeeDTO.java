@@ -5,6 +5,7 @@ import lombok.Data;
 
 @Data
 public class EmployeeDTO {
+    String name;
     String first_name;
     String gender;
     LocalDate date_of_birth;
