@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -13,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.example.demo.dto.ERP.WarehouseDTO;
 import com.example.demo.dto.RH.EmployeeDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -114,6 +114,44 @@ public class EmployeeService {
         }
         
         return employee;
+    }
+
+    public void createEmployee(String sid, EmployeeDTO employeeDTO) throws Exception {
+        String url = baseUrl + "/api/resource/Employee";
+        JSONObject json = new JSONObject();
+        json.put("doctype", "Employee");
+        json.put("first_name", employeeDTO.getFirst_name());
+        json.put("last_name", employeeDTO.getLast_name());
+        json.put("gender", employeeDTO.getGender());
+        json.put("company", employeeDTO.getCompany());
+
+        // Convertir les dates en string
+        if (employeeDTO.getDate_of_birth() != null) {
+            json.put("date_of_birth", employeeDTO.getDate_of_birth().toString()); // yyyy-MM-dd
+        }
+        if (employeeDTO.getDate_of_joining() != null) {
+            json.put("date_of_joining", employeeDTO.getDate_of_joining().toString());
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<String> entity = new HttpEntity<>(json.toString(), headers);
+
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+            url,
+            entity,
+            JsonNode.class
+        );
+
+        System.out.println("Response: " + response.getBody().toPrettyString());
+    }
+
+    public void saveEmployee(String sid, List<EmployeeDTO> employees) throws Exception {
+        for (EmployeeDTO employeeDTO : employees) {
+            createEmployee(sid, employeeDTO);
+        }
     }
 
     private String getTextValue(JsonNode node, String fieldName) {
