@@ -17,21 +17,25 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.dto.RH.EmployeeDTO;
+import com.example.demo.dto.RH.SalaryStructureAssignmentDTO;
 import com.example.demo.service.RH.EmployeeService;
 import com.example.demo.service.RH.ImportService;
 import com.example.demo.service.RH.SalaryComponentService;
+import com.example.demo.service.RH.SalaryStructureAssignmentService;
 
 @Controller
 @RequestMapping("/csv")
 public class ImportComtroller {
     @Autowired
-    public ImportService importService;
+    public ImportService importService; 
 
     @Autowired
     public EmployeeService employeeService;
 
     @Autowired
     public SalaryComponentService salaryComponentService;
+
+    @Autowired SalaryStructureAssignmentService salaryStructureAssignmemtService;
     
     @GetMapping
     public String showImportForm(){
@@ -49,31 +53,22 @@ public class ImportComtroller {
         List<String> errors = new ArrayList<>();
         try {
             // Sauvegarde temporaire du fichier employeeCsv
-            File employeeTempFile = File.createTempFile("employee-", ".csv");
-            try (InputStream in = employeeCsv.getInputStream();
-                 FileOutputStream out = new FileOutputStream(employeeTempFile)) {
-                in.transferTo(out);
-            }
+            File employeeTempFile = importService.saveTempFile(employeeCsv, "employee-");
+            File salaryTempFile = importService.saveTempFile(salaryStructureCsv, "salary-");
+            File assignmentTempFile = importService.saveTempFile(salarySlipCsv, "assignment-");
 
-            File salaryTempFile = File.createTempFile("salary-", ".csv");
-            try (InputStream in = salaryStructureCsv.getInputStream();
-                 FileOutputStream out = new FileOutputStream(salaryTempFile)) {
-                in.transferTo(out);
-            }
             // Validation
-            errors = importService.validateEmployeeCsv(sid , employeeTempFile.getAbsolutePath());
-            
+            importService.validateEmployeeCsv(sid , employeeTempFile.getAbsolutePath(), errors);
+            importService.validateAssignment(sid, assignmentTempFile.getAbsolutePath(), errors);
 
             if (errors.isEmpty()) {
-                List<EmployeeDTO> employees = importService.extractEmployee(employeeTempFile.getAbsolutePath());
-                importService.importSalaryStructures(sid, salaryTempFile.getAbsolutePath());
-                employeeService.saveEmployee(sid, employees);
+                importService.importData(sid, employeeTempFile.getAbsolutePath(), salaryTempFile.getAbsolutePath(), assignmentTempFile.getAbsolutePath());
+                model.addAttribute("message", "SUCCES");
             }
 
-            importService.importSalaryStructures(sid, salaryTempFile.getAbsolutePath());
-
-            salaryTempFile.delete();
             employeeTempFile.delete();
+            salaryTempFile.delete();
+            assignmentTempFile.delete();
         } catch (Exception e) {
             errors = List.of("Erreur lors du traitement du fichier : " + e.getMessage());
         }

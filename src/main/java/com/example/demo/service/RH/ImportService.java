@@ -1,6 +1,10 @@
 package com.example.demo.service.RH;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -9,29 +13,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.dto.RH.CompanyDTO;
 import com.example.demo.dto.RH.EmployeeDTO;
 import com.example.demo.dto.RH.GenderDTO;
 import com.example.demo.dto.RH.SalaryComponentDTO;
+import com.example.demo.dto.RH.SalaryStructureAssignmentDTO;
+import com.example.demo.dto.RH.SalaryStructureDTO;
 import com.opencsv.CSVReader;
 
 @Service
 public class ImportService {
     @Value("${erpnext.base-url}")
     private String baseUrl;
-
-    private final RestTemplate restTemplate;
 
     @Autowired 
     public CompanyService companyService;
@@ -42,17 +40,16 @@ public class ImportService {
     @Autowired
     public SalaryComponentService salaryComponentService;
 
-    public ImportService (RestTemplate restTemplate){
-        this.restTemplate = restTemplate;
-    }
+    @Autowired
+    public SalaryStructureService salaryStructureService;
 
-    /**
-     * Valide un fichier CSV d'employés et retourne la liste des erreurs.
-     * @param csvFilePath chemin du fichier CSV
-     * @return liste des erreurs (vide si tout est valide)
-     */
-    public List<String> validateEmployeeCsv(String sid, String csvFilePath) {
-        List<String> errors = new ArrayList<>();
+    @Autowired
+    public EmployeeService employeeService;
+
+    @Autowired
+    public SalaryStructureAssignmentService salaryStructureAssignmentService;
+
+    public void validateEmployeeCsv(String sid, String csvFilePath, List<String> errors) {
         String[] requiredHeaders = {"Ref", "Nom", "Prenom", "genre", "Date embauche", "date naissance", "company"};
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -60,7 +57,6 @@ public class ImportService {
             String[] headers = reader.readNext();
             if (headers == null) {
                 errors.add("Le fichier est vide.");
-                return errors;
             }
             // Vérifie les en-têtes
             for (int i = 0; i < requiredHeaders.length; i++) {
@@ -129,7 +125,6 @@ public class ImportService {
         } catch (Exception e) {
             errors.add("Erreur de validation CSV: " + e.getMessage());
         }
-        return errors;
     }
 
     public List<EmployeeDTO> extractEmployee(String csvFilePath) {
@@ -206,12 +201,12 @@ public class ImportService {
                 else if (h.equals("company")) idxCompany = i;
             }
             String[] fields;
-            while ((fields = reader.readNext()) != null) {
+            while ((fields = reader.readNext()) != null) { 
                 String structureName = fields[idxStructure].trim();
                 String salaryComponent = fields[idxName].trim();
                 String abbr = fields[idxAbbr].trim();
                 String type = fields[idxType].trim();
-                String valeur = fields[idxValeur].trim();
+                String formula = fields[idxValeur].trim();
                 String company = fields[idxCompany].trim();
 
                 if (type.equals("earning")) {
@@ -221,14 +216,11 @@ public class ImportService {
                     type = "Deduction";
                 }
 
-                // Correction : la formule doit être calculée pour tous les cas, pas seulement pourcentage+remarque
-                String formula = valeur;
-
                 SalaryComponentDTO component = new SalaryComponentDTO(
-                    salaryComponent, abbr, type, valeur, formula, "1", "0", company
+                    salaryComponent, abbr, type, formula, "1", "0", company
                 );
 
-                groupedByStructure.computeIfAbsent(structureName, k -> new ArrayList<>()).add(component);
+                addComponent(groupedByStructure, structureName, component);
             }
         }catch (Exception e) {
             e.printStackTrace();
@@ -238,14 +230,14 @@ public class ImportService {
             String structureName = entry.getKey();
             List<SalaryComponentDTO> components = entry.getValue();
 
-            JSONObject structureJson = new JSONObject();
-            structureJson.put("doctype", "Salary Structure");
-            structureJson.put("name", structureName);
-            structureJson.put("is_active", "Yes");
-            structureJson.put("company", "My Company");
+            SalaryStructureDTO salaryStructure = new SalaryStructureDTO();
+            salaryStructure.setName(structureName);
+            salaryStructure.setIs_active("Yes");
+            salaryStructure.setCompany(csvFilePath);
+            salaryStructure.setDocstatus("1");
 
-            JSONArray earnings = new JSONArray();
-            JSONArray deductions = new JSONArray();
+            List<SalaryComponentDTO> earnings = new ArrayList<>();
+            List<SalaryComponentDTO> deductions = new ArrayList<>();
 
             for (SalaryComponentDTO comp : components) {
                 // Vérifier si le Salary Component existe déjà avant de créer
@@ -262,21 +254,24 @@ public class ImportService {
                     salaryComponentService.createSalaryComponent(sid, comp);
                 }
 
-                JSONObject compJson = new JSONObject();
-                compJson.put("salary_component", comp.salary_component);
-                compJson.put("abbr", comp.salary_component_abbr);
-                compJson.put("amount_based_on_formula", 1);
-                compJson.put("formula", comp.formula != null ? comp.formula : "");
+                SalaryComponentDTO salaryComponent = new SalaryComponentDTO();
+                salaryComponent.setSalary_component(comp.salary_component);
+                salaryComponent.setSalary_component_abbr(comp.salary_component_abbr);
+                salaryComponent.setAmount_based_on_formula("1");
+                salaryComponent.setFormula(comp.formula);
+                salaryComponent.setType(comp.type.toLowerCase());
+
+                salaryStructure.setCompany(comp.company);
 
                 if (comp.type.equalsIgnoreCase("earning")) {
-                    earnings.put(compJson);
+                    earnings.add(salaryComponent);
                 } else {
-                    deductions.put(compJson);
+                    deductions.add(salaryComponent);
                 }
             }
 
-            structureJson.put("earnings", earnings);
-            structureJson.put("deductions", deductions);
+            salaryStructure.setEarnings(earnings);
+            salaryStructure.setDeductions(deductions);
 
             // Attendre que tous les Salary Components existent avant de créer la Salary Structure
             // Petite pause pour laisser ERPNext indexer les nouveaux composants (optionnel, mais utile en cas de latence)
@@ -286,18 +281,108 @@ public class ImportService {
                 // ignore
             }
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Cookie", "sid=" + sid);
-            headers.setContentType(MediaType.APPLICATION_JSON);
+            salaryStructureService.createSalaryStructure(sid, salaryStructure);
 
-            HttpEntity<String> entity = new HttpEntity<>(structureJson.toString(), headers);
-            ResponseEntity<String> response = restTemplate.postForEntity(
-                baseUrl + "/api/resource/Salary Structure",
-                entity,
-                String.class
-            );
+            System.out.println("Structure créée : " + salaryStructure);
+        }
+    }
 
-            System.out.println("Structure créée : " + response.getBody());
+    public void validateAssignment(String sid, String csvFilePath, List<String> errors){
+        String[] requiredHeaders = {"Mois", "Ref Employe", "Salaire Base", "Salaire"};
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        try (CSVReader reader = new CSVReader(new FileReader(csvFilePath))) {
+            String[] headers = reader.readNext();
+            
+            // Vérifie les en-têtes
+            for (int i = 0; i < requiredHeaders.length; i++) {
+                if (headers.length <= i || !headers[i].trim().equalsIgnoreCase(requiredHeaders[i])) {
+                    errors.add("En-tête manquant ou incorrect: " + requiredHeaders[i]);
+                }
+            }
+
+            String[] fields;
+            int row = 1;
+            while ((fields = reader.readNext()) != null) {
+                row++;
+                if (fields.length < requiredHeaders.length) {
+                    errors.add("Ligne " + row + " incomplète.");
+                    continue;
+                }
+                // Vérifie les dates
+                try {
+                    dateFormatter.parse(fields[0].trim()); // Date embauche
+                } catch (DateTimeParseException e) {
+                    errors.add("Format de \" Posting date \" invalide à la ligne " + row + " : " + fields[0]);
+                }
+            }
+        } catch (Exception e) {
+            errors.add("Erreur de validation CSV: " + e.getMessage());
+        }
+    }
+
+    public List<SalaryStructureAssignmentDTO> extractSalaryStructureAssignment(String sid, String csvFilePath){
+        List<SalaryStructureAssignmentDTO> val = new ArrayList<>();
+
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        try (CSVReader reader = new CSVReader(new FileReader(csvFilePath))) {
+            reader.readNext(); // skip header
+            String[] fields;
+            int row = 1;
+            while ((fields = reader.readNext()) != null) {
+                row++;
+                if (fields.length < 4) continue; // skip incomplete lines
+                SalaryStructureAssignmentDTO salaryStructureAssignment = new SalaryStructureAssignmentDTO();
+
+                LocalDate from_date;
+                try {
+                    String from_date_str = LocalDate.parse(fields[0].trim(), inputFormatter).format(outputFormatter);
+                    from_date = LocalDate.parse(from_date_str, outputFormatter);
+                } catch (Exception e) {
+                    System.err.println("Erreur parsing \"from date\" à la ligne " + row + " : " + fields[4] + " (" + e.getMessage() + ")");
+                    continue;
+                }
+
+                salaryStructureAssignment.setFrom_date(from_date);
+                salaryStructureAssignment.setEmployee_ref(fields[1].trim());
+                salaryStructureAssignment.setBase(fields[2].trim());
+                salaryStructureAssignment.setSalary_structure(fields[3].trim());
+
+                salaryStructureAssignment.setCurrency("ALL");
+
+                List<EmployeeDTO> employeeList = employeeService.getEmployeeByRef(sid, salaryStructureAssignment.getEmployee_ref());
+                EmployeeDTO employee = employeeList.get(0);
+
+                salaryStructureAssignment.setEmployee(employee.getName());
+                salaryStructureAssignment.setCompany(employee.getCompany());
+                
+                val.add(salaryStructureAssignment);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        for (SalaryStructureAssignmentDTO salary_structure_assignment : val) {
+            System.out.println("-------------------------------");
+            System.out.println("Extract ASSIGNMENT" + salary_structure_assignment);
+            System.out.println("-------------------------------");
+
+        }
+        
+        return val;
+    }
+    
+    public void importData(String sid, String EmployeeCsv, String SalaryCsv, String AssignmentCSV){
+        List<EmployeeDTO> employees = extractEmployee(EmployeeCsv);
+        List<SalaryStructureAssignmentDTO> assignments = extractSalaryStructureAssignment(sid, AssignmentCSV);
+
+        try {
+            employeeService.saveEmployee(sid, employees);
+            importSalaryStructures(sid, SalaryCsv);
+            salaryStructureAssignmentService.saveAssignments(sid,assignments);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -311,6 +396,19 @@ public class ImportService {
             }
         }
         return abbreviation.toString();
+    }
+
+    public File saveTempFile(MultipartFile multipartFile, String prefix) throws IOException {
+        File tempFile = File.createTempFile(prefix, ".csv");
+        try (InputStream in = multipartFile.getInputStream();
+            FileOutputStream out = new FileOutputStream(tempFile)) {
+            in.transferTo(out);
+        }
+        return tempFile;
+    }
+
+    private static void addComponent(Map<String, List<SalaryComponentDTO>> map, String structureName, SalaryComponentDTO component) {
+        map.computeIfAbsent(structureName, k -> new ArrayList<>()).add(component);
     }
 
 }

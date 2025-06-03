@@ -32,6 +32,17 @@
     <!-- Inclure la navbar -->
     <div th:replace="~{fragments/navbar :: navbar('rh')}"></div>
 
+    <!-- Message de succès -->
+    <div th:if="${message}" class="alert alert-success" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${message}"></span>
+    </div>
+    <!-- Message d'erreur -->
+    <div th:if="${error}" class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+    </div>
+
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
