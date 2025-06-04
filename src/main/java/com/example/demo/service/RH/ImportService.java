@@ -56,12 +56,12 @@ public class ImportService {
         try (CSVReader reader = new CSVReader(new FileReader(csvFilePath))) {
             String[] headers = reader.readNext();
             if (headers == null) {
-                errors.add("Le fichier est vide.");
+                errors.add("Fichier : " +csvFilePath+ "->Le fichier est vide.");
             }
             // Vérifie les en-têtes
             for (int i = 0; i < requiredHeaders.length; i++) {
                 if (headers.length <= i || !headers[i].trim().equalsIgnoreCase(requiredHeaders[i])) {
-                    errors.add("En-tête manquant ou incorrect: " + requiredHeaders[i]);
+                    errors.add("Fichier : " +csvFilePath+ "->En-tête manquant ou incorrect: " + requiredHeaders[i]);
                 }
             }
 
@@ -70,22 +70,28 @@ public class ImportService {
             while ((fields = reader.readNext()) != null) {
                 row++;
                 if (fields.length < requiredHeaders.length) {
-                    errors.add("Ligne " + row + " incomplète.");
+                    errors.add("Fichier : " +csvFilePath+ "->Ligne " + row + " incomplète.");
                     continue;
                 }
                 // Vérifie les dates
                 try {
                     dateFormatter.parse(fields[4].trim()); // Date embauche
                 } catch (DateTimeParseException e) {
-                    errors.add("Format de date d'embauche invalide à la ligne " + row + " : " + fields[4]);
+                    errors.add("Fichier : " +csvFilePath+ "->Format de date d'embauche invalide à la ligne " + row + " : " + fields[4]);
                 }
                 try {
                     dateFormatter.parse(fields[5].trim()); // date naissance
                 } catch (DateTimeParseException e) {
-                    errors.add("Format de date de naissance invalide à la ligne " + row + " : " + fields[5]);
+                    errors.add("Fichier : " +csvFilePath+ "->Format de date de naissance invalide à la ligne " + row + " : " + fields[5]);
                 }
                 // Vérifie le genre
                 String genre = fields[3].trim();
+                if (genre.equalsIgnoreCase("Masculin")) {
+                    genre = "Male";
+                }
+                if (genre.equalsIgnoreCase("Feminin")) {
+                    genre = "Female";
+                }
 
                 boolean exist_gender = false;
                 List<GenderDTO> genders = genderService.getGender(sid);
@@ -119,11 +125,11 @@ public class ImportService {
 
                     companyService.createCompany(sid, newCompany);
 
-                    errors.add("Company inexistate a la ligne " + row + ": " + fields[6]);
+                    errors.add("Fichier : " +csvFilePath+ "->Company inexistate a la ligne " + row + ": " + fields[6]);
                 }
             }
         } catch (Exception e) {
-            errors.add("Erreur de validation CSV: " + e.getMessage());
+            errors.add("Fichier : " +csvFilePath+ "->Erreur de validation CSV: " + e.getMessage());
         }
     }
 
@@ -177,19 +183,18 @@ public class ImportService {
             System.out.println("-------------------------------");
 
         }
-        
         return val;
     }
 
-    public void importSalaryStructures(String sid, String csvFilePath) throws Exception {
+    // public void validateSalaryStructure(String csvFilePath, List<String> errors)
+
+    public List<SalaryStructureDTO> extractSalaryStructure(String csvFilePath){
         Map<String, List<SalaryComponentDTO>> groupedByStructure = new HashMap<>();
+        List<SalaryStructureDTO> val = new ArrayList<>();
 
         try (CSVReader reader = new CSVReader(new FileReader(csvFilePath))) {
             String[] headers = reader.readNext(); // read header
-            if (headers == null) {
-                System.err.println("CSV vide ou sans en-tête.");
-                return;
-            }
+            
             int idxStructure = -1, idxName = -1, idxAbbr = -1, idxType = -1, idxValeur = -1, idxCompany = -1;
             for (int i = 0; i < headers.length; i++) {
                 String h = headers[i].trim().toLowerCase();
@@ -240,33 +245,12 @@ public class ImportService {
             List<SalaryComponentDTO> deductions = new ArrayList<>();
 
             for (SalaryComponentDTO comp : components) {
-                // Vérifier si le Salary Component existe déjà avant de créer
-                boolean exists = false;
-                try {
-                    salaryComponentService.getSalaryComponentByName(sid, comp.salary_component);
-                    exists = true;
-                } catch (Exception ex) {
-                    exists = false;
-                }
-
-                // Créer le Salary Component s'il n'existe pas
-                if (!exists) {
-                    salaryComponentService.createSalaryComponent(sid, comp);
-                }
-
-                SalaryComponentDTO salaryComponent = new SalaryComponentDTO();
-                salaryComponent.setSalary_component(comp.salary_component);
-                salaryComponent.setSalary_component_abbr(comp.salary_component_abbr);
-                salaryComponent.setAmount_based_on_formula("1");
-                salaryComponent.setFormula(comp.formula);
-                salaryComponent.setType(comp.type.toLowerCase());
-
                 salaryStructure.setCompany(comp.company);
 
                 if (comp.type.equalsIgnoreCase("earning")) {
-                    earnings.add(salaryComponent);
+                    earnings.add(comp);
                 } else {
-                    deductions.add(salaryComponent);
+                    deductions.add(comp);
                 }
             }
 
@@ -281,13 +265,122 @@ public class ImportService {
                 // ignore
             }
 
-            salaryStructureService.createSalaryStructure(sid, salaryStructure);
+            val.add(salaryStructure);
 
             System.out.println("Structure créée : " + salaryStructure);
+
+            
         }
+        return val;
     }
 
-    public void validateAssignment(String sid, String csvFilePath, List<String> errors){
+    // public void importSalaryStructures(String sid, String csvFilePath) throws Exception {
+    //     Map<String, List<SalaryComponentDTO>> groupedByStructure = new HashMap<>();
+
+    //     try (CSVReader reader = new CSVReader(new FileReader(csvFilePath))) {
+    //         String[] headers = reader.readNext(); // read header
+    //         if (headers == null) {
+    //             System.err.println("CSV vide ou sans en-tête.");
+    //             return;
+    //         }
+    //         int idxStructure = -1, idxName = -1, idxAbbr = -1, idxType = -1, idxValeur = -1, idxCompany = -1;
+    //         for (int i = 0; i < headers.length; i++) {
+    //             String h = headers[i].trim().toLowerCase();
+    //             if (h.equals("salary structure")) idxStructure = i;
+    //             else if (h.equals("name")) idxName = i;
+    //             else if (h.equals("abbr")) idxAbbr = i;
+    //             else if (h.equals("type")) idxType = i;
+    //             else if (h.equals("valeur")) idxValeur = i;
+    //             else if (h.equals("company")) idxCompany = i;
+    //         }
+    //         String[] fields;
+    //         while ((fields = reader.readNext()) != null) { 
+    //             String structureName = fields[idxStructure].trim();
+    //             String salaryComponent = fields[idxName].trim();
+    //             String abbr = fields[idxAbbr].trim();
+    //             String type = fields[idxType].trim();
+    //             String formula = fields[idxValeur].trim();
+    //             String company = fields[idxCompany].trim();
+
+    //             if (type.equals("earning")) {
+    //                 type = "Earning";
+    //             }
+    //             if (type.equals("deduction")) {
+    //                 type = "Deduction";
+    //             }
+
+    //             SalaryComponentDTO component = new SalaryComponentDTO(
+    //                 salaryComponent, abbr, type, formula, "1", "0", company
+    //             );
+
+    //             addComponent(groupedByStructure, structureName, component);
+    //         }
+    //     }catch (Exception e) {
+    //         e.printStackTrace();
+    //     }
+
+    //     for (Map.Entry<String, List<SalaryComponentDTO>> entry : groupedByStructure.entrySet()) {
+    //         String structureName = entry.getKey();
+    //         List<SalaryComponentDTO> components = entry.getValue();
+
+    //         SalaryStructureDTO salaryStructure = new SalaryStructureDTO();
+    //         salaryStructure.setName(structureName);
+    //         salaryStructure.setIs_active("Yes");
+    //         salaryStructure.setCompany(csvFilePath);
+    //         salaryStructure.setDocstatus("1");
+
+    //         List<SalaryComponentDTO> earnings = new ArrayList<>();
+    //         List<SalaryComponentDTO> deductions = new ArrayList<>();
+
+    //         for (SalaryComponentDTO comp : components) {
+    //             // Vérifier si le Salary Component existe déjà avant de créer
+    //             boolean exists = false;
+    //             try {
+    //                 salaryComponentService.getSalaryComponentByName(sid, comp.salary_component);
+    //                 exists = true;
+    //             } catch (Exception ex) {
+    //                 exists = false;
+    //             }
+
+    //             // Créer le Salary Component s'il n'existe pas
+    //             if (!exists) {
+    //                 salaryComponentService.createSalaryComponent(sid, comp);
+    //             }
+
+    //             SalaryComponentDTO salaryComponent = new SalaryComponentDTO();
+    //             salaryComponent.setSalary_component(comp.salary_component);
+    //             salaryComponent.setSalary_component_abbr(comp.salary_component_abbr);
+    //             salaryComponent.setAmount_based_on_formula("1");
+    //             salaryComponent.setFormula(comp.formula);
+    //             salaryComponent.setType(comp.type.toLowerCase());
+
+    //             salaryStructure.setCompany(comp.company);
+
+    //             if (comp.type.equalsIgnoreCase("earning")) {
+    //                 earnings.add(salaryComponent);
+    //             } else {
+    //                 deductions.add(salaryComponent);
+    //             }
+    //         }
+
+    //         salaryStructure.setEarnings(earnings);
+    //         salaryStructure.setDeductions(deductions);
+
+    //         // Attendre que tous les Salary Components existent avant de créer la Salary Structure
+    //         // Petite pause pour laisser ERPNext indexer les nouveaux composants (optionnel, mais utile en cas de latence)
+    //         try {
+    //             Thread.sleep(500);
+    //         } catch (InterruptedException e) {
+    //             // ignore
+    //         }
+
+    //         salaryStructureService.createSalaryStructure(sid, salaryStructure);
+
+    //         System.out.println("Structure créée : " + salaryStructure);
+    //     }
+    // }
+
+    public void validateAssignment(String csvFilePath, List<String> errors){
         String[] requiredHeaders = {"Mois", "Ref Employe", "Salaire Base", "Salaire"};
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -297,7 +390,7 @@ public class ImportService {
             // Vérifie les en-têtes
             for (int i = 0; i < requiredHeaders.length; i++) {
                 if (headers.length <= i || !headers[i].trim().equalsIgnoreCase(requiredHeaders[i])) {
-                    errors.add("En-tête manquant ou incorrect: " + requiredHeaders[i]);
+                    errors.add("Fichier : " +csvFilePath+ "->En-tête manquant ou incorrect: " + requiredHeaders[i]);
                 }
             }
 
@@ -306,22 +399,22 @@ public class ImportService {
             while ((fields = reader.readNext()) != null) {
                 row++;
                 if (fields.length < requiredHeaders.length) {
-                    errors.add("Ligne " + row + " incomplète.");
+                    errors.add("Fichier : " +csvFilePath+ "->Ligne " + row + " incomplète.");
                     continue;
                 }
                 // Vérifie les dates
                 try {
                     dateFormatter.parse(fields[0].trim()); // Date embauche
                 } catch (DateTimeParseException e) {
-                    errors.add("Format de \" Posting date \" invalide à la ligne " + row + " : " + fields[0]);
+                    errors.add("Fichier : " +csvFilePath+ "->Format de \" Posting date \" invalide à la ligne " + row + " : " + fields[0]);
                 }
             }
         } catch (Exception e) {
-            errors.add("Erreur de validation CSV: " + e.getMessage());
+            errors.add("Fichier : " +csvFilePath+ "->Erreur de validation CSV: " + e.getMessage());
         }
     }
 
-    public List<SalaryStructureAssignmentDTO> extractSalaryStructureAssignment(String sid, String csvFilePath){
+    public List<SalaryStructureAssignmentDTO> extractAssignment(String sid, String csvFilePath){
         List<SalaryStructureAssignmentDTO> val = new ArrayList<>();
 
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -375,11 +468,12 @@ public class ImportService {
     
     public void importData(String sid, String EmployeeCsv, String SalaryCsv, String AssignmentCSV){
         List<EmployeeDTO> employees = extractEmployee(EmployeeCsv);
-        List<SalaryStructureAssignmentDTO> assignments = extractSalaryStructureAssignment(sid, AssignmentCSV);
+        List<SalaryStructureDTO> structures = extractSalaryStructure(SalaryCsv);
+        List<SalaryStructureAssignmentDTO> assignments = extractAssignment(sid, AssignmentCSV);
 
         try {
             employeeService.saveEmployee(sid, employees);
-            importSalaryStructures(sid, SalaryCsv);
+            salaryStructureService.saveSalaryStructure(sid, structures);
             salaryStructureAssignmentService.saveAssignments(sid,assignments);
         } catch (Exception e) {
             e.printStackTrace();

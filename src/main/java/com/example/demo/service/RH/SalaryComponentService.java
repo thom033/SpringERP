@@ -71,4 +71,15 @@ public class SalaryComponentService {
         }
     }
 
+    public boolean SalaryComponentExist(String sid, String name){
+        Boolean exists;
+        try {
+            getSalaryComponentByName(sid, name);
+            exists = true;
+        } catch (Exception ex) {
+            exists = false;
+        }
+
+        return exists;
+    }
 }

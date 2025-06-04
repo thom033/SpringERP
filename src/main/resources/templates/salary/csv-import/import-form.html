@@ -39,8 +39,10 @@
     </div>
     <!-- Message d'erreur -->
     <div th:if="${error}" class="alert alert-danger" role="alert">
-        <i class="fas fa-exclamation-circle me-2"></i>
-        <span th:text="${error}"></span>
+        <div th:each="er : ${error}">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${er}"></span>
+        </div>
     </div>
 
     <div class="container mt-4">
@@ -54,15 +56,15 @@
             <form th:action="@{/csv}" class="row g-2 align-items-end mb-3" method="POST" enctype="multipart/form-data">
                 <div class="col-12">
                     <label for="mois" class="form-label mb-0">Employee</label>
-                    <input type="file" name="employee" accept=".csv" class="form-control" placeholder="CSV">
+                    <input type="file" name="employee" accept=".csv" class="form-control" placeholder="CSV" required>
                 </div>
                 <div class="col-12">
                     <label for="mois" class="form-label mb-0">Salary Structure</label>
-                    <input type="file" name="salary_structure" accept=".csv" class="form-control" placeholder="CSV">
+                    <input type="file" name="salary_structure" accept=".csv" class="form-control" placeholder="CSV" required>
                 </div>
                 <div class="col-12">
                     <label for="mois" class="form-label mb-0">Salary Slip</label>
-                    <input type="file" name="salary_slip" accept=".csv" class="form-control" placeholder="CSV">
+                    <input type="file" name="salary_slip" accept=".csv" class="form-control" placeholder="CSV" required>
                 </div>
                 <div class="col-12 mb-4">
                     <button type="submit" class="btn btn-primary">Filtrer</button>

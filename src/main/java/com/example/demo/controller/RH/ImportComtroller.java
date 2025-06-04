@@ -1,8 +1,6 @@
 package com.example.demo.controller.RH;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,8 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.demo.dto.RH.EmployeeDTO;
-import com.example.demo.dto.RH.SalaryStructureAssignmentDTO;
 import com.example.demo.service.RH.EmployeeService;
 import com.example.demo.service.RH.ImportService;
 import com.example.demo.service.RH.SalaryComponentService;
@@ -59,7 +55,7 @@ public class ImportComtroller {
 
             // Validation
             importService.validateEmployeeCsv(sid , employeeTempFile.getAbsolutePath(), errors);
-            importService.validateAssignment(sid, assignmentTempFile.getAbsolutePath(), errors);
+            importService.validateAssignment(assignmentTempFile.getAbsolutePath(), errors);
 
             if (errors.isEmpty()) {
                 importService.importData(sid, employeeTempFile.getAbsolutePath(), salaryTempFile.getAbsolutePath(), assignmentTempFile.getAbsolutePath());
@@ -69,6 +65,8 @@ public class ImportComtroller {
             employeeTempFile.delete();
             salaryTempFile.delete();
             assignmentTempFile.delete();
+
+            model.addAttribute("error", errors);
         } catch (Exception e) {
             errors = List.of("Erreur lors du traitement du fichier : " + e.getMessage());
         }
