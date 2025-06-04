@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.demo.dto.RH.CompanyDTO;
 import com.example.demo.dto.RH.EmployeeDTO;
 import com.example.demo.dto.RH.GenderDTO;
+import com.example.demo.dto.RH.SalaryComponentAccountDTO;
 import com.example.demo.dto.RH.SalaryComponentDTO;
 import com.example.demo.dto.RH.SalaryStructureAssignmentDTO;
 import com.example.demo.dto.RH.SalaryStructureDTO;
@@ -188,7 +189,7 @@ public class ImportService {
 
     // public void validateSalaryStructure(String csvFilePath, List<String> errors)
 
-    public List<SalaryStructureDTO> extractSalaryStructure(String csvFilePath){
+    public List<SalaryStructureDTO> extractSalaryStructure(String sid, String csvFilePath){
         Map<String, List<SalaryComponentDTO>> groupedByStructure = new HashMap<>();
         List<SalaryStructureDTO> val = new ArrayList<>();
 
@@ -221,8 +222,20 @@ public class ImportService {
                     type = "Deduction";
                 }
 
+                System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+                System.out.println("Company: " + company);
+                System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+                CompanyDTO companyDTO = companyService.getCompanyByName(sid, company);
+
+                List<SalaryComponentAccountDTO> accounts = new ArrayList<>();
+                SalaryComponentAccountDTO account = new SalaryComponentAccountDTO();
+                account.setCompany(company);
+                account.setAccount("Payroll Payable - " + companyDTO.getAbbr());
+
+                accounts.add(account);
+
                 SalaryComponentDTO component = new SalaryComponentDTO(
-                    salaryComponent, abbr, type, formula, "1", "0", company
+                    salaryComponent, abbr, type, formula, "1", "0", company, accounts
                 );
 
                 addComponent(groupedByStructure, structureName, component);
@@ -273,112 +286,6 @@ public class ImportService {
         }
         return val;
     }
-
-    // public void importSalaryStructures(String sid, String csvFilePath) throws Exception {
-    //     Map<String, List<SalaryComponentDTO>> groupedByStructure = new HashMap<>();
-
-    //     try (CSVReader reader = new CSVReader(new FileReader(csvFilePath))) {
-    //         String[] headers = reader.readNext(); // read header
-    //         if (headers == null) {
-    //             System.err.println("CSV vide ou sans en-tête.");
-    //             return;
-    //         }
-    //         int idxStructure = -1, idxName = -1, idxAbbr = -1, idxType = -1, idxValeur = -1, idxCompany = -1;
-    //         for (int i = 0; i < headers.length; i++) {
-    //             String h = headers[i].trim().toLowerCase();
-    //             if (h.equals("salary structure")) idxStructure = i;
-    //             else if (h.equals("name")) idxName = i;
-    //             else if (h.equals("abbr")) idxAbbr = i;
-    //             else if (h.equals("type")) idxType = i;
-    //             else if (h.equals("valeur")) idxValeur = i;
-    //             else if (h.equals("company")) idxCompany = i;
-    //         }
-    //         String[] fields;
-    //         while ((fields = reader.readNext()) != null) { 
-    //             String structureName = fields[idxStructure].trim();
-    //             String salaryComponent = fields[idxName].trim();
-    //             String abbr = fields[idxAbbr].trim();
-    //             String type = fields[idxType].trim();
-    //             String formula = fields[idxValeur].trim();
-    //             String company = fields[idxCompany].trim();
-
-    //             if (type.equals("earning")) {
-    //                 type = "Earning";
-    //             }
-    //             if (type.equals("deduction")) {
-    //                 type = "Deduction";
-    //             }
-
-    //             SalaryComponentDTO component = new SalaryComponentDTO(
-    //                 salaryComponent, abbr, type, formula, "1", "0", company
-    //             );
-
-    //             addComponent(groupedByStructure, structureName, component);
-    //         }
-    //     }catch (Exception e) {
-    //         e.printStackTrace();
-    //     }
-
-    //     for (Map.Entry<String, List<SalaryComponentDTO>> entry : groupedByStructure.entrySet()) {
-    //         String structureName = entry.getKey();
-    //         List<SalaryComponentDTO> components = entry.getValue();
-
-    //         SalaryStructureDTO salaryStructure = new SalaryStructureDTO();
-    //         salaryStructure.setName(structureName);
-    //         salaryStructure.setIs_active("Yes");
-    //         salaryStructure.setCompany(csvFilePath);
-    //         salaryStructure.setDocstatus("1");
-
-    //         List<SalaryComponentDTO> earnings = new ArrayList<>();
-    //         List<SalaryComponentDTO> deductions = new ArrayList<>();
-
-    //         for (SalaryComponentDTO comp : components) {
-    //             // Vérifier si le Salary Component existe déjà avant de créer
-    //             boolean exists = false;
-    //             try {
-    //                 salaryComponentService.getSalaryComponentByName(sid, comp.salary_component);
-    //                 exists = true;
-    //             } catch (Exception ex) {
-    //                 exists = false;
-    //             }
-
-    //             // Créer le Salary Component s'il n'existe pas
-    //             if (!exists) {
-    //                 salaryComponentService.createSalaryComponent(sid, comp);
-    //             }
-
-    //             SalaryComponentDTO salaryComponent = new SalaryComponentDTO();
-    //             salaryComponent.setSalary_component(comp.salary_component);
-    //             salaryComponent.setSalary_component_abbr(comp.salary_component_abbr);
-    //             salaryComponent.setAmount_based_on_formula("1");
-    //             salaryComponent.setFormula(comp.formula);
-    //             salaryComponent.setType(comp.type.toLowerCase());
-
-    //             salaryStructure.setCompany(comp.company);
-
-    //             if (comp.type.equalsIgnoreCase("earning")) {
-    //                 earnings.add(salaryComponent);
-    //             } else {
-    //                 deductions.add(salaryComponent);
-    //             }
-    //         }
-
-    //         salaryStructure.setEarnings(earnings);
-    //         salaryStructure.setDeductions(deductions);
-
-    //         // Attendre que tous les Salary Components existent avant de créer la Salary Structure
-    //         // Petite pause pour laisser ERPNext indexer les nouveaux composants (optionnel, mais utile en cas de latence)
-    //         try {
-    //             Thread.sleep(500);
-    //         } catch (InterruptedException e) {
-    //             // ignore
-    //         }
-
-    //         salaryStructureService.createSalaryStructure(sid, salaryStructure);
-
-    //         System.out.println("Structure créée : " + salaryStructure);
-    //     }
-    // }
 
     public void validateAssignment(String csvFilePath, List<String> errors){
         String[] requiredHeaders = {"Mois", "Ref Employe", "Salaire Base", "Salaire"};
@@ -445,12 +352,6 @@ public class ImportService {
 
                 salaryStructureAssignment.setCurrency("ALL");
 
-                List<EmployeeDTO> employeeList = employeeService.getEmployeeByRef(sid, salaryStructureAssignment.getEmployee_ref());
-                EmployeeDTO employee = employeeList.get(0);
-
-                salaryStructureAssignment.setEmployee(employee.getName());
-                salaryStructureAssignment.setCompany(employee.getCompany());
-                
                 val.add(salaryStructureAssignment);
             }
         } catch (Exception e) {
@@ -468,7 +369,7 @@ public class ImportService {
     
     public void importData(String sid, String EmployeeCsv, String SalaryCsv, String AssignmentCSV){
         List<EmployeeDTO> employees = extractEmployee(EmployeeCsv);
-        List<SalaryStructureDTO> structures = extractSalaryStructure(SalaryCsv);
+        List<SalaryStructureDTO> structures = extractSalaryStructure(sid,SalaryCsv);
         List<SalaryStructureAssignmentDTO> assignments = extractAssignment(sid, AssignmentCSV);
 
         try {

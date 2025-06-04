@@ -54,18 +54,29 @@ public class CompanyService {
                 CompanyDTO dto = new CompanyDTO();
                 dto.setName(getTextValue(company, "name"));
                 dto.setCompany_name(getTextValue(company, "company_name"));
+                dto.setAbbr(getTextValue(company, "abbr"));
 
                 companies.add(dto);
             }
         }
         
 
-        System.out.println("Liste des employés récupérés :");
+        System.out.println("Liste des COMPANY récupérés :");
         for (CompanyDTO comp : companies) {
             System.out.println(comp);
         }
         
         return companies;
+    }
+
+    public CompanyDTO getCompanyByName(String sid, String companyName) throws Exception {
+        List<CompanyDTO> companies = getCompany(sid);
+        for (CompanyDTO company : companies) {
+            if (company.getCompany_name().equalsIgnoreCase(companyName)) {
+                return company;
+            }
+        }
+        return null;
     }
 
     public void createCompany(String sid, CompanyDTO companyDTO) throws Exception {

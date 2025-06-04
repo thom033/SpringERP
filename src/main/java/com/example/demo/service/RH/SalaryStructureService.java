@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.example.demo.dto.ERP.WarehouseDTO;
 import com.example.demo.dto.RH.SalaryComponentDTO;
 import com.example.demo.dto.RH.SalaryStructureDTO;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -46,7 +45,9 @@ public class SalaryStructureService {
             JsonNode.class
         );
 
-        System.out.println("Response: " + response.getBody().toPrettyString());
+        System.out.println("---------------------------------------");
+        System.out.println("Response Salary Strycture: " + response.getBody().toPrettyString());
+        System.out.println("---------------------------------------");
     }
 
     public void saveSalaryStructure(String sid, List<SalaryStructureDTO> structure){

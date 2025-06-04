@@ -3,6 +3,7 @@ package com.example.demo.service.RH;
 import java.util.List;
 
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.example.demo.dto.RH.EmployeeDTO;
 import com.example.demo.dto.RH.SalaryStructureAssignmentDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -21,12 +23,22 @@ public class SalaryStructureAssignmentService {
 
     private final RestTemplate restTemplate;
 
+    @Autowired
+    public EmployeeService employeeService;
+
     public SalaryStructureAssignmentService (RestTemplate restTemplate){
         this.restTemplate = restTemplate;
     }
 
     public void createSalaryStructureAssignement(String sid, SalaryStructureAssignmentDTO salaryStructureAssignment) throws Exception {
         String url = baseUrl + "/api/resource/Salary Structure Assignment";
+        
+        List<EmployeeDTO> employeeList = employeeService.getEmployeeByRef(sid, salaryStructureAssignment.getEmployee_ref());
+        EmployeeDTO employee = employeeList.get(0);
+
+        salaryStructureAssignment.setEmployee(employee.getName());
+        salaryStructureAssignment.setCompany(employee.getCompany());
+
         JSONObject json = new JSONObject();
         json.put("doctype", "Salary Structure Assignment");
         json.put("employee_ref", salaryStructureAssignment.getEmployee_ref());
@@ -35,6 +47,7 @@ public class SalaryStructureAssignmentService {
         json.put("currency", salaryStructureAssignment.getCurrency());
         json.put("company", salaryStructureAssignment.getCompany());
         json.put("employee", salaryStructureAssignment.getEmployee());
+        json.put("docstatus", "1");
 
         // Convertir les dates en string
         if (salaryStructureAssignment.getFrom_date() != null) {
