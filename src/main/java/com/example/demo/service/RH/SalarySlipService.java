@@ -27,7 +27,7 @@ public class SalarySlipService {
     public SalarySlipService (RestTemplate restTemplate){
         this.restTemplate = restTemplate;
     }
-
+    
     public List<SalarySlipDTO> getSalarySlip(String sid){
         List<SalarySlipDTO> salarys = new ArrayList<>();
         try {
@@ -83,6 +83,26 @@ public class SalarySlipService {
         }
         return salarys;
     }
+    
+    public List<SalarySlipDTO> completeSalarySlip(String sid, List<SalarySlipDTO> salarys) {
+        List<SalarySlipDTO> completeSalarys = new ArrayList<>();
+        try {
+            for (SalarySlipDTO salary : salarys) {
+                SalarySlipDTO dto = getSalarySlipbyName(sid, salary.getName());
+                completeSalarys.add(dto);
+            }
+            System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+            System.out.println("Liste des Slary Slip complétés :");
+            for (SalarySlipDTO emp : completeSalarys) {
+                System.out.println(emp);
+            }
+            System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des Salary Slip : " + e.getMessage());
+            e.printStackTrace();
+        }
+        return completeSalarys;
+    }
 
     public List<SalarySlipDTO> getSalarySlipByMonth(String sid,List<SalarySlipDTO> list, int month, int annee){
         List<SalarySlipDTO> val = new ArrayList<>();
@@ -95,6 +115,7 @@ public class SalarySlipService {
         }
         return val;
     }
+    
     public List<SalarySlipDTO> getSalarySlip(String sid,String Employee){
         List<SalarySlipDTO> salarys = new ArrayList<>();
         try {
@@ -150,7 +171,7 @@ public class SalarySlipService {
         }
         return salarys;
     }
-
+    
     public SalarySlipDTO getSalarySlipbyName(String sid, String salarySlipName){
         SalarySlipDTO dto = new SalarySlipDTO();
         try {
@@ -230,4 +251,5 @@ public class SalarySlipService {
     private String getTextValue(JsonNode node, String fieldName) {
         return node.has(fieldName) ? node.get(fieldName).asText() : null;
     }
-}
+
+    }

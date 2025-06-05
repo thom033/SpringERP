@@ -17,8 +17,10 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import com.example.demo.dto.RH.EmployeeDTO;
+import com.example.demo.dto.RH.SalaryComponentDTO;
 import com.example.demo.dto.RH.SalarySlipDTO;
 import com.example.demo.service.RH.EmployeeService;
+import com.example.demo.service.RH.SalaryComponentService;
 import com.example.demo.service.RH.SalarySlipService;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -34,6 +36,9 @@ public class SalarySlipController {
 
     @Autowired
     private SpringTemplateEngine templateEngine;
+
+    @Autowired 
+    private SalaryComponentService salaryComponentService;
 
 
     @GetMapping("/{EmployeeId}")
@@ -113,8 +118,11 @@ public class SalarySlipController {
         Model model
     ){
         List<SalarySlipDTO> salarys = salarySlipService.getSalarySlip(sid);
+        salarys = salarySlipService.completeSalarySlip(sid, salarys);
+        List<SalaryComponentDTO> components = salaryComponentService.getSalaryComponent(sid);
 
         model.addAttribute("salarys", salarys);
+        model.addAttribute("components", components);
         return "salary/salary-all";
     }
 
@@ -126,9 +134,12 @@ public class SalarySlipController {
         Model model
     ){
         List<SalarySlipDTO> salarys = salarySlipService.getSalarySlip(sid);
+        salarys = salarySlipService.completeSalarySlip(sid, salarys);
+        List<SalaryComponentDTO> components = salaryComponentService.getSalaryComponent(sid);
         salarys = salarySlipService.getSalarySlipByMonth(sid, salarys, mois, annee);
 
         model.addAttribute("salarys", salarys);
+        model.addAttribute("components", components);
         return "salary/salary-all";
     }
 }
