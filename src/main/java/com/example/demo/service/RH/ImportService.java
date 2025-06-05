@@ -87,26 +87,20 @@ public class ImportService {
                 }
                 // Vérifie le genre
                 String genre = fields[3].trim();
-                if (genre.equalsIgnoreCase("Masculin")) {
-                    genre = "Male";
-                }
-                if (genre.equalsIgnoreCase("Feminin")) {
-                    genre = "Female";
-                }
 
-                boolean exist_gender = false;
-                List<GenderDTO> genders = genderService.getGender(sid);
+                // boolean exist_gender = false;
+                // List<GenderDTO> genders = genderService.getGender(sid);
 
-                for (GenderDTO gend : genders) {
-                    if(gend.getGender().equalsIgnoreCase(genre)) exist_gender = true;
-                }
+                // for (GenderDTO gend : genders) {
+                //     if(gend.getGender().equalsIgnoreCase(genre)) exist_gender = true;
+                // }
 
-                if (exist_gender == false) {
-                    GenderDTO newGender = new GenderDTO();
-                    newGender.setGender(genre);
+                // if (exist_gender == false) {
+                //     GenderDTO newGender = new GenderDTO();
+                //     newGender.setGender(genre);
 
-                    genderService.createGender(sid, newGender);
-                }
+                //     genderService.createGender(sid, newGender);
+                // }
 
                 String company = fields[6].trim();
                 
@@ -149,7 +143,16 @@ public class ImportService {
                 employee.setRef(fields[0].trim());
                 employee.setLast_name(fields[1].trim());
                 employee.setFirst_name(fields[2].trim());
-                employee.setGender(fields[3].trim());
+
+                String genre = fields[3].trim();
+                if (genre.equalsIgnoreCase("Masculin")) {
+                    genre = "Male";
+                }
+                if (genre.equalsIgnoreCase("Feminin")) {
+                    genre = "Female";
+                }
+
+                employee.setGender(genre);
                 // Parse and format dates to yyyy-MM-dd, then set as LocalDate
                 LocalDate joining;
                 LocalDate birth;
