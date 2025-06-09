@@ -31,7 +31,7 @@ public class CompanyService {
         String fields = "[\"*\"]";
         String filter = "[]";
 
-        String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter;
+        String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter + "&limit=0";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", "sid=" + sid);
@@ -61,10 +61,10 @@ public class CompanyService {
         }
         
 
-        System.out.println("Liste des COMPANY récupérés :");
-        for (CompanyDTO comp : companies) {
-            System.out.println(comp);
-        }
+        // System.out.println("Liste des COMPANY récupérés :");
+        // for (CompanyDTO comp : companies) {
+        //     System.out.println(comp);
+        // }
         
         return companies;
     }
@@ -95,7 +95,8 @@ public class CompanyService {
             JsonNode.class
         );
 
-        System.out.println("Response: " + response.getBody().toPrettyString());
+        // System.out.println("Response: " + response.getBody().toPrettyString());
+        System.out.println("Company created:" + companyDTO.getCompany_name());
     }
 
     private String getTextValue(JsonNode node, String fieldName) {

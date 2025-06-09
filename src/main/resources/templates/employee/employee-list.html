@@ -26,6 +26,7 @@
                     <table class="table">
                         <thead>
                             <tr>
+                                <th>Ref</th>
                                 <th>Name</th>
                                 <th>Gender</th>
                                 <th>Date of birth</th>
@@ -37,6 +38,7 @@
                         </thead>
                         <tbody>
                             <tr th:each="employee : ${employees}">
+                                <td th:text="${employee.ref}"></td>
                                 <td th:text="${employee.first_name}"></td>
                                 <td th:text="${employee.gender}"></td>
                                 <td th:text="${employee.date_of_birth}"></td>

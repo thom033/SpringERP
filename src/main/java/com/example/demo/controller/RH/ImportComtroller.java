@@ -85,4 +85,17 @@ public class ImportComtroller {
         return "salary/csv-import/import-form";
     }
 
+    @GetMapping("/reset-database")
+    public String resetDatabase(
+        @CookieValue(name = "sid", required = true) String sid, 
+        Model model
+        ) {
+        try {
+            importService.resetDatabase(sid);
+            model.addAttribute("message", "Database reset successfully.");
+        } catch (Exception e) {
+            model.addAttribute("error", "Failed to reset database: " + e.getMessage());
+        }
+        return "salary/csv-import/import-form"; // Redirect to the import form after reset
+    }
 }

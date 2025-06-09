@@ -10,13 +10,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.example.demo.dto.RH.EmployeeDTO;
-import com.example.demo.dto.RH.SalarySlipDTO;
 import com.example.demo.service.RH.EmployeeService;
 import com.example.demo.service.RH.SalarySlipService;
 
 @Controller
 @RequestMapping("/employee")
-public class EmployeeComtroller {
+public class EmployeeController {
     @Autowired
     public EmployeeService employeeService;
 

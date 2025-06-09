@@ -15,14 +15,19 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.dto.RH.CompanyDTO;
 import com.example.demo.dto.RH.EmployeeDTO;
-import com.example.demo.dto.RH.GenderDTO;
 import com.example.demo.dto.RH.SalaryComponentAccountDTO;
 import com.example.demo.dto.RH.SalaryComponentDTO;
+import com.example.demo.dto.RH.SalarySlipDTO;
 import com.example.demo.dto.RH.SalaryStructureAssignmentDTO;
 import com.example.demo.dto.RH.SalaryStructureDTO;
 import com.opencsv.CSVReader;
@@ -49,6 +54,32 @@ public class ImportService {
 
     @Autowired
     public SalaryStructureAssignmentService salaryStructureAssignmentService;
+
+    @Autowired
+    public SalarySlipService salarySlipService;
+
+    private final RestTemplate restTemplate;
+
+    public ImportService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    public void resetDatabase(String sid){
+        try {
+            String url = baseUrl + "/api/method/erpnext.api.reset.reset_data";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Cookie", "sid=" + sid);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<String> request = new HttpEntity<>("{}", headers);
+
+            ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     public void validateEmployeeCsv(String sid, String csvFilePath, List<String> errors) {
         String[] requiredHeaders = {"Ref", "Nom", "Prenom", "genre", "Date embauche", "date naissance", "company"};
@@ -181,16 +212,14 @@ public class ImportService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        for (EmployeeDTO employeeDTO : val) {
-            System.out.println("-------------------------------");
-            System.out.println("Extract" + employeeDTO);
-            System.out.println("-------------------------------");
+        // for (EmployeeDTO employeeDTO : val) {
+        //     System.out.println("-------------------------------");
+        //     System.out.println("Extract" + employeeDTO);
+        //     System.out.println("-------------------------------");
 
-        }
+        // }
         return val;
     }
-
-    // public void validateSalaryStructure(String csvFilePath, List<String> errors)
 
     public List<SalaryStructureDTO> extractSalaryStructure(String sid, String csvFilePath){
         Map<String, List<SalaryComponentDTO>> groupedByStructure = new HashMap<>();
@@ -225,9 +254,9 @@ public class ImportService {
                     type = "Deduction";
                 }
 
-                System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-                System.out.println("Company: " + company);
-                System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+                // System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+                // System.out.println("Company: " + company);
+                // System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
                 CompanyDTO companyDTO = companyService.getCompanyByName(sid, company);
 
                 List<SalaryComponentAccountDTO> accounts = new ArrayList<>();
@@ -254,6 +283,7 @@ public class ImportService {
             SalaryStructureDTO salaryStructure = new SalaryStructureDTO();
             salaryStructure.setName(structureName);
             salaryStructure.setIs_active("Yes");
+            salaryStructure.setIs_default("Yes");
             salaryStructure.setCompany(csvFilePath);
             salaryStructure.setDocstatus("1");
 
@@ -273,19 +303,9 @@ public class ImportService {
             salaryStructure.setEarnings(earnings);
             salaryStructure.setDeductions(deductions);
 
-            // Attendre que tous les Salary Components existent avant de créer la Salary Structure
-            // Petite pause pour laisser ERPNext indexer les nouveaux composants (optionnel, mais utile en cas de latence)
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                // ignore
-            }
-
             val.add(salaryStructure);
 
-            System.out.println("Structure créée : " + salaryStructure);
-
-            
+            System.out.println("Structure créée : " + salaryStructure.getName() + "Method : extractSalaryStructure iportService");
         }
         return val;
     }
@@ -361,15 +381,12 @@ public class ImportService {
             e.printStackTrace();
         }
         for (SalaryStructureAssignmentDTO salary_structure_assignment : val) {
-            System.out.println("-------------------------------");
-            System.out.println("Extract ASSIGNMENT" + salary_structure_assignment);
-            System.out.println("-------------------------------");
-
+            System.out.println("Extract ASSIGNMENT" + salary_structure_assignment.getSalary_structure() + " for emp ref :" + salary_structure_assignment.getEmployee_ref());
         }
         
         return val;
     }
-    
+
     public void importData(String sid, String EmployeeCsv, String SalaryCsv, String AssignmentCSV){
         List<EmployeeDTO> employees = extractEmployee(EmployeeCsv);
         List<SalaryStructureDTO> structures = extractSalaryStructure(sid,SalaryCsv);
@@ -379,8 +396,15 @@ public class ImportService {
             employeeService.saveEmployee(sid, employees);
             salaryStructureService.saveSalaryStructure(sid, structures);
             salaryStructureAssignmentService.saveAssignments(sid,assignments);
+
+            List<SalarySlipDTO> salarySlips = salarySlipService.generateSalarySlip(sid,assignments);
+            System.out.println("OK VITA NY GENERATE");
+            
+            salarySlipService.saveSalarySlip(sid, salarySlips);
+            System.out.println("OK VITA NY SAVE SLIP");
         } catch (Exception e) {
             e.printStackTrace();
+
         }
     }
 

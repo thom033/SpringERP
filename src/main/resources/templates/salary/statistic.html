@@ -35,30 +35,12 @@
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="mb-1"><i class="bi bi-cash-stack"></i> Liste des Salaires</h2>
+                <h2 class="mb-1"><i class="bi bi-cash-stack"></i> Statistic page</h2>
             </div>
         </div>
 
         <div>
-            <form th:action="@{/salary/all}" class="row g-2 align-items-end mb-3" method="POST">
-                <div class="col-auto">
-                    <label for="mois" class="form-label mb-0">Mois</label>
-                    <select id="mois" name="mois" class="form-select">
-                        <option value="">Mois</option>
-                        <option value="01">Janvier</option>
-                        <option value="02">Février</option>
-                        <option value="03">Mars</option>
-                        <option value="04">Avril</option>
-                        <option value="05">Mai</option>
-                        <option value="06">Juin</option>
-                        <option value="07">Juillet</option>
-                        <option value="08">Août</option>
-                        <option value="09">Septembre</option>
-                        <option value="10">Octobre</option>
-                        <option value="11">Novembre</option>
-                        <option value="12">Décembre</option>
-                    </select>
-                </div>
+            <form th:action="@{/salary/statistic}" class="row g-2 align-items-end mb-3" method="POST">
                 <div class="col-auto">
                     <label for="annee" class="form-label mb-0">Année</label>
                     <input type="number" id="annee" name="annee" class="form-control" min="1900" max="2100" placeholder="Année">
@@ -75,34 +57,36 @@
                     <table class="table salary-table align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>Employee Name</th>
-                                <th>Structure</th>
-                                <th>Total Brut</th>
-                                <th>Total Déductions</th>
-                                <th>Net à payer</th>
-                                <th>Date</th>
+                                <th>Mois</th>
+                                <th>Gross pay</th>
+                                <th>Total Deduction</th>
+                                <th>Net Pay</th>
                                 <th th:each="component : ${components}" th:text="${component.salary_component}"></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="salary : ${salarys}">
-                                <td th:text="${salary.employee_name}"></td>
-                                <td th:text="${salary.salary_structure}"></td>
+                            <tr th:each="salary, iterStat : ${salarys}">
+                                <td th:text="${iterStat.count}"></td>
                                 <td th:text="${#numbers.formatDecimal(salary.total_earnings, 1, 'COMMA', 2, 'POINT')} + ' ' + ${salary.currency}"></td>
                                 <td th:text="${#numbers.formatDecimal(salary.total_deduction, 1, 'COMMA', 2, 'POINT')} + ' ' + ${salary.currency}"></td>
                                 <td>
-                                    <span class="fw-bold text-success" th:text="${#numbers.formatDecimal(salary.net_pay, 1, 'COMMA', 2, 'POINT')} + ' ' + ${salary.currency}"></span>
+                                    <form th:action="@{/salary/all}" method="POST" class="d-inline">
+                                        <input type="hidden" name="annee" th:value="${annee}">
+                                        <input type="hidden" name="mois" th:value="${iterStat.count}">
+                                        <button type="submit" class="btn btn-link p-0 border-0 bg-transparent text-decoration-none">
+                                            <span th:text="${#numbers.formatDecimal(salary.net_pay, 1, 'COMMA', 2, 'POINT') + ' ' + salary.currency}"></span>
+                                        </button>
+                                    </form>
                                 </td>
-                                <td th:text="${#temporals.format(salary.posting_date, 'dd/MM/yyyy')}"></td>
                                 <td th:each="component : ${components}">
-                                    <span th:if="${component.type == 'Earning'}">
+                                    <span th:if="${component.type == 'Earning'}" style="background-color: green;">
                                         <span th:with="found=false">
                                             <span th:each="earning : ${salary.earnings}">
                                                 <span th:if="${!found and earning.salary_component == component.salary_component}" th:text="${earning.amount}" th:with="found=true"></span>
                                             </span>
                                         </span>
                                     </span>
-                                    <span th:if="${component.type == 'Deduction'}">
+                                    <span th:if="${component.type == 'Deduction'}" style="background-color: red;">
                                         <span th:with="found=false">
                                             <span th:each="deduction : ${salary.deductions}">
                                                 <span th:if="${!found and deduction.salary_component == component.salary_component}" th:text="${deduction.amount}" th:with="found=true"></span>
@@ -112,23 +96,21 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td></td>
-                                <td></td>
+                                <td>Total:</td>
                                 <td th:text="${#numbers.formatDecimal(sumTotal.gross_pay, 1, 'COMMA', 2, 'POINT')} + ' ' + ${sumTotal.currency}"></td>
                                 <td th:text="${#numbers.formatDecimal(sumTotal.total_deduction, 1, 'COMMA', 2, 'POINT')} + ' ' + ${sumTotal.currency}"></td>
                                 <td>
                                     <span class="fw-bold text-success" th:text="${#numbers.formatDecimal(sumTotal.net_pay, 1, 'COMMA', 2, 'POINT')} + ' ' + ${sumTotal.currency}"></span>
                                 </td>
-                                <td th:text="${#temporals.format(sumTotal.posting_date, 'dd/MM/yyyy')}"></td>
                                 <td th:each="component : ${components}">
-                                    <span th:if="${component.type == 'Earning'}">
+                                    <span th:if="${component.type == 'Earning'}" style="background-color: green;">
                                         <span th:with="found=false">
                                             <span th:each="earning : ${sumTotal.earnings}">
                                                 <span th:if="${!found and earning.salary_component == component.salary_component}" th:text="${earning.amount}" th:with="found=true"></span>
                                             </span>
                                         </span>
                                     </span>
-                                    <span th:if="${component.type == 'Deduction'}">
+                                    <span th:if="${component.type == 'Deduction'}" style="background-color: red;">
                                         <span th:with="found=false">
                                             <span th:each="deduction : ${sumTotal.deductions}">
                                                 <span th:if="${!found and deduction.salary_component == component.salary_component}" th:text="${deduction.amount}" th:with="found=true"></span>
