@@ -1,5 +1,6 @@
 package com.example.demo.service.RH;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -163,7 +164,6 @@ public class EmployeeService {
         }
         return val;
     }
-
     public void createEmployee(String sid, EmployeeDTO employeeDTO) throws Exception {
         String url = baseUrl + "/api/resource/Employee";
         JSONObject json = new JSONObject();
