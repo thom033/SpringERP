@@ -46,7 +46,8 @@ public class SalaryStructureService {
         );
 
         System.out.println("---------------------------------------");
-        System.out.println("Response Salary Strycture: " + response.getBody().toPrettyString());
+        // System.out.println("Response Salary Strycture: " + response.getBody().toPrettyString());
+        System.out.println("Salary Structure created w => " + salaryStructureDTO.getName());
         System.out.println("---------------------------------------");
     }
 

@@ -1,7 +1,9 @@
 package com.example.demo.service.RH;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.json.JSONObject;
@@ -9,9 +11,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.demo.dto.RH.EmployeeDTO;
@@ -20,7 +24,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 @Service
 public class EmployeeService {
     @Value("${erpnext.base-url}")
-    private String baseUrl;
+    public String baseUrl;
 
     private final RestTemplate restTemplate;
 
@@ -33,7 +37,7 @@ public class EmployeeService {
         String fields = "[\"*\"]";
         String filter = "[]";
 
-        String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter;
+        String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter + "&limit=0";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", "sid=" + sid);
@@ -56,6 +60,8 @@ public class EmployeeService {
                 EmployeeDTO dto = new EmployeeDTO();
                 dto.setName(getTextValue(employee, "name"));
                 dto.setFirst_name(getTextValue(employee, "first_name"));
+                dto.setLast_name(getTextValue(employee, "last_name"));
+                dto.setRef(getTextValue(employee, "ref"));
                 dto.setGender(getTextValue(employee, "gender"));
                 dto.setDate_of_birth(LocalDate.parse(getTextValue(employee, "date_of_birth")));
                 dto.setDate_of_joining(LocalDate.parse(getTextValue(employee, "date_of_joining")));
@@ -68,20 +74,19 @@ public class EmployeeService {
 
         System.out.println("Liste des employés récupérés :");
         for (EmployeeDTO emp : employees) {
-            System.out.println(emp);
+            System.out.println("Empname: "+emp.getName()+" empRef: " + emp.getRef() + "first_name: " + emp.getFirst_name() + " last_name: " + emp.getLast_name());
         }
         
         return employees;
     }
     
-    public EmployeeDTO getEmployeeByName(String sid, String employeeName){
-        EmployeeDTO employee = new EmployeeDTO();
+    public EmployeeDTO getEmployeeByName(String sid, String employeeName) throws Exception {
         try {
             String url = baseUrl + "/api/resource/Employee/" + employeeName;
 
             HttpHeaders headers = new HttpHeaders();
             headers.set("Cookie", "sid=" + sid);
-            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
@@ -91,29 +96,72 @@ public class EmployeeService {
                 entity,
                 JsonNode.class
             );
-    
-            if (response.getBody() != null && response.getBody().has("data")) {
-                JsonNode data = response.getBody().get("data");
-    
-                employee.setName(getTextValue(data, "name"));
-                employee.setFirst_name(getTextValue(data, "first_name"));
-                employee.setGender(getTextValue(data, "gender"));
-                employee.setDate_of_birth(LocalDate.parse(getTextValue(data, "date_of_birth")));
-                employee.setDate_of_joining(LocalDate.parse(getTextValue(data, "date_of_joining")));
-                employee.setStatus(getTextValue(data, "status"));
-                employee.setCompany(getTextValue(data, "company"));
+
+            if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+                throw new Exception("Erreur de réponse de l'API: " + response.getStatusCode());
+            }
+
+            JsonNode data = response.getBody().get("data");
+            if (data == null || data.isNull()) {
+                throw new Exception("Employee not found: " + employeeName);
+            }
+
+            // Création du DTO
+            EmployeeDTO dto = new EmployeeDTO();
+            dto.setName(getTextValue(data, "name"));
+            dto.setFirst_name(getTextValue(data, "first_name"));
+            dto.setLast_name(getTextValue(data, "last_name"));
+            dto.setRef(getTextValue(data, "ref"));
+            dto.setGender(getTextValue(data, "gender"));
+            
+            // Gestion des dates nullables
+            String dob = getTextValue(data, "date_of_birth");
+            if (dob != null) {
+                dto.setDate_of_birth(LocalDate.parse(dob));
             }
             
+            String doj = getTextValue(data, "date_of_joining");
+            if (doj != null) {
+                dto.setDate_of_joining(LocalDate.parse(doj));
+            }
+            
+            dto.setStatus(getTextValue(data, "status"));
+            dto.setCompany(getTextValue(data, "company"));
 
-            System.out.println("Employé récupéré by name :");
-            System.out.println(employee);
+            // log.info("Employee retrieved - Name: {}, Ref: {}", dto.getName(), dto.getRef());
+            return dto;
 
+        } catch (RestClientException e) {
+            throw new Exception("Erreur de communication avec l'API: " + e.getMessage(), e);
+        } catch (DateTimeParseException e) {
+            throw new Exception("Format de date invalide dans la réponse", e);
         } catch (Exception e) {
-            System.err.println("Erreur lors de la récupération des Salary Slip : " + e.getMessage());
-            e.printStackTrace();
+            throw new Exception("Erreur inattendue: " + e.getMessage(), e);
         }
-        
-        return employee;
+    }
+    
+    public String getEmployeeFullName(EmployeeDTO employee){
+        return employee.getFirst_name() + " " + employee.getLast_name();
+    } 
+
+    public List<EmployeeDTO> filterEmployeeByName(String sid, String employeeName, List<EmployeeDTO> list){
+        List<EmployeeDTO> val = new ArrayList<>();
+        for (EmployeeDTO employee : list) {
+            if (getEmployeeFullName(employee).contains(employeeName)) {
+                val.add(employee);
+            }
+        }
+        return val;
+    }
+
+    public List<EmployeeDTO> filterEmployeeByGender(String sid, String employeeGender, List<EmployeeDTO> list){
+        List<EmployeeDTO> val = new ArrayList<>();
+        for (EmployeeDTO employee : list) {
+            if (employee.getGender().equalsIgnoreCase(employeeGender)) {
+                val.add(employee);
+            }
+        }
+        return val;
     }
 
     public void createEmployee(String sid, EmployeeDTO employeeDTO) throws Exception {
@@ -146,7 +194,8 @@ public class EmployeeService {
             JsonNode.class
         );
 
-        System.out.println("Response: " + response.getBody().toPrettyString());
+        // System.out.println("Response: " + response.getBody().toPrettyString());
+        System.out.println("Employee created w => ref:" + employeeDTO.getRef());
     }
 
     public void saveEmployee(String sid, List<EmployeeDTO> employees) throws Exception {
@@ -156,52 +205,20 @@ public class EmployeeService {
     }
 
     public List<EmployeeDTO> getEmployeeByRef(String sid, String ref) throws Exception{
-        String doctype = "Employee";
-        String fields = "[\"*\"]";
-        String filter = "[[\"ref\" , \"=\" , \"" + ref + "\"]]";
-
-        String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter;
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Cookie", "sid=" + sid);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<JsonNode> response = restTemplate.exchange(
-            url,
-            HttpMethod.GET,
-            entity,
-            JsonNode.class
-        );
-    
-        List<EmployeeDTO> employees = new ArrayList<>();
-
-        if (response.getBody() != null && response.getBody().has("data")) {
-            JsonNode data = response.getBody().get("data");
-            for (JsonNode employee : data) {
-                EmployeeDTO dto = new EmployeeDTO();
-                dto.setName(getTextValue(employee, "name"));
-                dto.setFirst_name(getTextValue(employee, "first_name"));
-                dto.setGender(getTextValue(employee, "gender"));
-                dto.setDate_of_birth(LocalDate.parse(getTextValue(employee, "date_of_birth")));
-                dto.setDate_of_joining(LocalDate.parse(getTextValue(employee, "date_of_joining")));
-                dto.setStatus(getTextValue(employee, "status"));
-                dto.setCompany(getTextValue(employee, "company"));
-                employees.add(dto);
+        List<EmployeeDTO> allEmployees = getEmployee(sid);
+        List<EmployeeDTO> filteredEmployees = new ArrayList<>();
+        for (EmployeeDTO employee : allEmployees) {
+            if (employee.getRef() != null && employee.getRef().equalsIgnoreCase(ref)) {
+                filteredEmployees.add(employee);
             }
         }
-        
-
-        System.out.println("Liste des employés récupérés By REF:");
-        for (EmployeeDTO emp : employees) {
-            System.out.println(emp);
-        }
-        
-        return employees;
+        return filteredEmployees;
     }
     
     private String getTextValue(JsonNode node, String fieldName) {
         return node.has(fieldName) ? node.get(fieldName).asText() : null;
     }
+
+    
+
 }

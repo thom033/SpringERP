@@ -35,7 +35,7 @@ public class GenderService {
         String fields = "[\"*\"]";
         String filter = "[]";
 
-        String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter;
+        String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter + "&limit=0";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", "sid=" + sid);
@@ -87,7 +87,8 @@ public class GenderService {
             JsonNode.class
         );
 
-        System.out.println("Response: " + response.getBody().toPrettyString());
+        // System.out.println("Response: " + response.getBody().toPrettyString());
+        System.out.println("Gender created:" + genderDTO.getGender());
     }
 
     private String getTextValue(JsonNode node, String fieldName) {

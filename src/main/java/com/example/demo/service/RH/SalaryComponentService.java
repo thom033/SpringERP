@@ -31,7 +31,7 @@ public class SalaryComponentService {
         String fields = "[\"*\"]";
         String filter = "[]";
 
-        String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter;
+        String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter + "&limit=0";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", "sid=" + sid);
@@ -91,7 +91,8 @@ public class SalaryComponentService {
             JsonNode.class
         );
 
-        System.out.println("Response: " + response.getBody().toPrettyString());
+        // System.out.println("Response: " + response.getBody().toPrettyString());
+        System.out.println("Salary Component created : " + salaryComponentDTO.getSalary_component());
     }
 
     public SalaryComponentDTO getSalaryComponentByName(String sid, String name) throws Exception {

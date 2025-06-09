@@ -9,6 +9,7 @@ public class SalaryStructureDTO {
     String name;
     String company;
     String is_active; // Yes No
+    String is_default; // Yes No
     String currency;
     List<SalaryComponentDTO> earnings;
     List<SalaryComponentDTO> deductions;
