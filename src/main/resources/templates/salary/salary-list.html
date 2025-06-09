@@ -89,11 +89,11 @@
                         <thead class="table-light">
                             <tr>
                                 <th>#</th>
+                                <th>Date</th>
                                 <th>Structure</th>
                                 <th>Total Brut</th>
                                 <th>Total Déductions</th>
                                 <th>Net à payer</th>
-                                <th>Date</th>
                                 <th></th>
                                 <th></th>
                             </tr>
@@ -101,13 +101,14 @@
                         <tbody>
                             <tr th:each="salary, iterStat : ${salarys}">
                                 <td th:text="${iterStat.count}"></td>
+                                <td th:text="${#temporals.format(salary.posting_date, 'dd/MM/yyyy')}"></td>
                                 <td th:text="${salary.salary_structure}"></td>
                                 <td th:text="${#numbers.formatDecimal(salary.gross_pay, 1, 'COMMA', 2, 'POINT')} + ' ' + ${salary.currency}"></td>
                                 <td th:text="${#numbers.formatDecimal(salary.total_deduction, 1, 'COMMA', 2, 'POINT')} + ' ' + ${salary.currency}"></td>
                                 <td>
                                     <span class="fw-bold text-success" th:text="${#numbers.formatDecimal(salary.net_pay, 1, 'COMMA', 2, 'POINT')} + ' ' + ${salary.currency}"></span>
                                 </td>
-                                <td th:text="${#temporals.format(salary.posting_date, 'dd/MM/yyyy')}"></td>
+                                
                                 <td>
                                     <a th:href="@{/salary/detail/{id}(id=${salary.name})}" class="btn btn-outline-primary btn-sm">
                                         <i class="bi bi-eye"></i> Détail

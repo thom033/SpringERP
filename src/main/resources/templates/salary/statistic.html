@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Liste des Salaires</title>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+    <style>
+        .employee-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            padding: 2rem 2.5rem;
+            margin-bottom: 2rem;
+        }
+        .employee-label {
+            font-weight: 500;
+            color: #555;
+        }
+        .employee-value {
+            font-weight: 600;
+            color: #222;
+        }
+        .salary-table th, .salary-table td {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <!-- Inclure la navbar -->
+    <div th:replace="~{fragments/navbar :: navbar('rh')}"></div>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-cash-stack"></i> Statistic page</h2>
+            </div>
+        </div>
+
+        <div>
+            <form th:action="@{/salary/statistic}" class="row g-2 align-items-end mb-3" method="POST">
+                <div class="col-auto">
+                    <label for="annee" class="form-label mb-0">Année</label>
+                    <input type="number" id="annee" name="annee" class="form-control" min="1900" max="2100" placeholder="Année">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Filtrer</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table salary-table align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mois</th>
+                                <th>Gross pay</th>
+                                <th>Total Deduction</th>
+                                <th>Net Pay</th>
+                                <th th:each="component : ${components}" th:text="${component.salary_component}"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="salary, iterStat : ${salarys}">
+                                <td th:text="${iterStat.count}"></td>
+                                <td th:text="${#numbers.formatDecimal(salary.total_earnings, 1, 'COMMA', 2, 'POINT')} + ' ' + ${salary.currency}"></td>
+                                <td th:text="${#numbers.formatDecimal(salary.total_deduction, 1, 'COMMA', 2, 'POINT')} + ' ' + ${salary.currency}"></td>
+                                <td>
+                                    <form th:action="@{/salary/all}" method="POST" class="d-inline">
+                                        <input type="hidden" name="annee" th:value="${annee}">
+                                        <input type="hidden" name="mois" th:value="${iterStat.count}">
+                                        <button type="submit" class="btn btn-link p-0 border-0 bg-transparent text-decoration-none">
+                                            <span th:text="${#numbers.formatDecimal(salary.net_pay, 1, 'COMMA', 2, 'POINT') + ' ' + salary.currency}"></span>
+                                        </button>
+                                    </form>
+                                </td>
+                                <td th:each="component : ${components}">
+                                    <span th:if="${component.type == 'Earning'}" style="background-color: green;">
+                                        <span th:with="found=false">
+                                            <span th:each="earning : ${salary.earnings}">
+                                                <span th:if="${!found and earning.salary_component == component.salary_component}" th:text="${earning.amount}" th:with="found=true"></span>
+                                            </span>
+                                        </span>
+                                    </span>
+                                    <span th:if="${component.type == 'Deduction'}" style="background-color: red;">
+                                        <span th:with="found=false">
+                                            <span th:each="deduction : ${salary.deductions}">
+                                                <span th:if="${!found and deduction.salary_component == component.salary_component}" th:text="${deduction.amount}" th:with="found=true"></span>
+                                            </span>
+                                        </span>
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Total:</td>
+                                <td th:text="${#numbers.formatDecimal(sumTotal.gross_pay, 1, 'COMMA', 2, 'POINT')} + ' ' + ${sumTotal.currency}"></td>
+                                <td th:text="${#numbers.formatDecimal(sumTotal.total_deduction, 1, 'COMMA', 2, 'POINT')} + ' ' + ${sumTotal.currency}"></td>
+                                <td>
+                                    <span class="fw-bold text-success" th:text="${#numbers.formatDecimal(sumTotal.net_pay, 1, 'COMMA', 2, 'POINT')} + ' ' + ${sumTotal.currency}"></span>
+                                </td>
+                                <td th:each="component : ${components}">
+                                    <span th:if="${component.type == 'Earning'}" style="background-color: green;">
+                                        <span th:with="found=false">
+                                            <span th:each="earning : ${sumTotal.earnings}">
+                                                <span th:if="${!found and earning.salary_component == component.salary_component}" th:text="${earning.amount}" th:with="found=true"></span>
+                                            </span>
+                                        </span>
+                                    </span>
+                                    <span th:if="${component.type == 'Deduction'}" style="background-color: red;">
+                                        <span th:with="found=false">
+                                            <span th:each="deduction : ${sumTotal.deductions}">
+                                                <span th:if="${!found and deduction.salary_component == component.salary_component}" th:text="${deduction.amount}" th:with="found=true"></span>
+                                            </span>
+                                        </span>
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(salarys)}">
+                                <td colspan="8" class="text-center text-muted">Aucun salaire trouvé pour cet employé.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-5 mb-5">
+            <div class="card-body">
+                <h5 class="card-title">Graphique des salaires par mois</h5>
+                <div style="height: 400px;">
+                    <canvas id="salaryStatisticChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const labels = [
+            "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+            "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+        ];
+        const salarys = /*[[${salarys}]]*/ [];
+        const components = /*[[${components}]]*/ [];
+        const netPays = salarys.map(s => s.net_pay);
+        const totalEarnings = salarys.map(s => s.total_earnings);
+        const totalDeductions = salarys.map(s => s.total_deduction);
+
+        // Préparation des datasets pour chaque composant
+        const componentDatasets = [];
+        for (let i = 0; i < components.length; i++) {
+            const comp = components[i];
+            const data = [];
+            for (let j = 0; j < salarys.length; j++) {
+                let val = null;
+                if (comp.type === 'Earning' && salarys[j].earnings) {
+                    for (let e of salarys[j].earnings) {
+                        if (e.salary_component === comp.salary_component) {
+                            val = e.amount;
+                            break;
+                        }
+                    }
+                }
+                if (comp.type === 'Deduction' && salarys[j].deductions) {
+                    for (let d of salarys[j].deductions) {
+                        if (d.salary_component === comp.salary_component) {
+                            val = d.amount;
+                            break;
+                        }
+                    }
+                }
+                data.push(val !== null ? val : 0);
+            }
+            componentDatasets.push({
+                label: comp.salary_component,
+                data: data,
+                borderWidth: 1,
+                fill: false,
+                tension: 0.1,
+                borderColor: comp.type === 'Earning' ? 'rgba(40,167,69,0.7)' : 'rgba(220,53,69,0.7)',
+                backgroundColor: comp.type === 'Earning' ? 'rgba(40,167,69,0.2)' : 'rgba(220,53,69,0.2)',
+                pointRadius: 2,
+                borderDash: comp.type === 'Deduction' ? [5,5] : undefined
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('salaryStatisticChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.slice(0, netPays.length),
+                    datasets: [
+                        {
+                            label: 'Net à payer',
+                            data: netPays,
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            fill: false,
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'Total Earnings',
+                            data: totalEarnings,
+                            backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                            borderColor: 'rgba(40, 167, 69, 1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            fill: false,
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'Total Deductions',
+                            data: totalDeductions,
+                            backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                            borderColor: 'rgba(220, 53, 69, 1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            fill: false,
+                            pointRadius: 4
+                        },
+                        ...componentDatasets
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        });
+        /*]]>*/
+    </script>
+</body>
+</html>

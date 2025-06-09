@@ -75,25 +75,26 @@
                     <table class="table salary-table align-middle">
                         <thead class="table-light">
                             <tr>
+                                <th>Date</th>
                                 <th>Employee Name</th>
                                 <th>Structure</th>
                                 <th>Total Brut</th>
                                 <th>Total Déductions</th>
                                 <th>Net à payer</th>
-                                <th>Date</th>
                                 <th th:each="component : ${components}" th:text="${component.salary_component}"></th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:each="salary : ${salarys}">
+                                <td th:text="${#temporals.format(salary.posting_date, 'dd/MM/yyyy')}"></td>
                                 <td th:text="${salary.employee_name}"></td>
                                 <td th:text="${salary.salary_structure}"></td>
-                                <td th:text="${#numbers.formatDecimal(salary.gross_pay, 1, 'COMMA', 2, 'POINT')} + ' ' + ${salary.currency}"></td>
+                                <td th:text="${#numbers.formatDecimal(salary.total_earnings, 1, 'COMMA', 2, 'POINT')} + ' ' + ${salary.currency}"></td>
                                 <td th:text="${#numbers.formatDecimal(salary.total_deduction, 1, 'COMMA', 2, 'POINT')} + ' ' + ${salary.currency}"></td>
                                 <td>
                                     <span class="fw-bold text-success" th:text="${#numbers.formatDecimal(salary.net_pay, 1, 'COMMA', 2, 'POINT')} + ' ' + ${salary.currency}"></span>
                                 </td>
-                                <td th:text="${#temporals.format(salary.posting_date, 'dd/MM/yyyy')}"></td>
+                                
                                 <td th:each="component : ${components}">
                                     <span th:if="${component.type == 'Earning'}">
                                         <span th:with="found=false">
@@ -105,6 +106,32 @@
                                     <span th:if="${component.type == 'Deduction'}">
                                         <span th:with="found=false">
                                             <span th:each="deduction : ${salary.deductions}">
+                                                <span th:if="${!found and deduction.salary_component == component.salary_component}" th:text="${deduction.amount}" th:with="found=true"></span>
+                                            </span>
+                                        </span>
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td th:text="${#numbers.formatDecimal(sumTotal.gross_pay, 1, 'COMMA', 2, 'POINT')} + ' ' + ${sumTotal.currency}"></td>
+                                <td th:text="${#numbers.formatDecimal(sumTotal.total_deduction, 1, 'COMMA', 2, 'POINT')} + ' ' + ${sumTotal.currency}"></td>
+                                <td>
+                                    <span class="fw-bold text-success" th:text="${#numbers.formatDecimal(sumTotal.net_pay, 1, 'COMMA', 2, 'POINT')} + ' ' + ${sumTotal.currency}"></span>
+                                </td>
+                                <td th:text="${#temporals.format(sumTotal.posting_date, 'dd/MM/yyyy')}"></td>
+                                <td th:each="component : ${components}">
+                                    <span th:if="${component.type == 'Earning'}">
+                                        <span th:with="found=false">
+                                            <span th:each="earning : ${sumTotal.earnings}">
+                                                <span th:if="${!found and earning.salary_component == component.salary_component}" th:text="${earning.amount}" th:with="found=true"></span>
+                                            </span>
+                                        </span>
+                                    </span>
+                                    <span th:if="${component.type == 'Deduction'}">
+                                        <span th:with="found=false">
+                                            <span th:each="deduction : ${sumTotal.deductions}">
                                                 <span th:if="${!found and deduction.salary_component == component.salary_component}" th:text="${deduction.amount}" th:with="found=true"></span>
                                             </span>
                                         </span>
