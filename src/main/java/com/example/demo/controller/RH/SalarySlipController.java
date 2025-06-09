@@ -1,6 +1,8 @@
 package com.example.demo.controller.RH;
 
 import java.io.OutputStream;
+import java.time.Year;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,27 +121,111 @@ public class SalarySlipController {
     ){
         List<SalarySlipDTO> salarys = salarySlipService.getSalarySlip(sid);
         salarys = salarySlipService.completeSalarySlip(sid, salarys);
+        SalarySlipDTO sumTotal = salarySlipService.sumSalarySlip(salarys);
         List<SalaryComponentDTO> components = salaryComponentService.getSalaryComponent(sid);
 
         model.addAttribute("salarys", salarys);
         model.addAttribute("components", components);
+        model.addAttribute("sumTotal", sumTotal);
         return "salary/salary-all";
     }
 
     @PostMapping("/all")
     public String showSalarySlipMonth(
         @CookieValue(name = "sid", required = true) String sid,
-        @RequestParam int mois,
-        @RequestParam int annee,
+        @RequestParam(required = false) Integer mois,
+        @RequestParam(required = false) Integer annee,
+        Model model
+    ){
+        // Valeurs par défaut si non renseignées
+        int moisValue = (mois != null) ? mois : 1;
+        int anneeValue = (annee != null) ? annee : Year.now().getValue();
+
+        List<SalarySlipDTO> salarys = salarySlipService.getSalarySlip(sid);
+        salarys = salarySlipService.completeSalarySlip(sid, salarys);
+        List<SalaryComponentDTO> components = salaryComponentService.getSalaryComponent(sid);
+        salarys = salarySlipService.getSalarySlipByMonth(sid, salarys, moisValue, anneeValue);
+        SalarySlipDTO sumTotal = salarySlipService.sumSalarySlip(salarys);
+
+        model.addAttribute("salarys", salarys);
+        model.addAttribute("components", components);
+        model.addAttribute("sumTotal", sumTotal);
+        return "salary/salary-all";
+    }
+
+    @GetMapping("/statistic")
+    public String showStatistic(
+        @CookieValue(name = "sid", required = true) String sid,
         Model model
     ){
         List<SalarySlipDTO> salarys = salarySlipService.getSalarySlip(sid);
         salarys = salarySlipService.completeSalarySlip(sid, salarys);
+        salarys = salarySlipService.statistic(sid, salarys, 2025);
+        SalarySlipDTO sumTotal = salarySlipService.sumSalarySlip(salarys);
         List<SalaryComponentDTO> components = salaryComponentService.getSalaryComponent(sid);
-        salarys = salarySlipService.getSalarySlipByMonth(sid, salarys, mois, annee);
 
         model.addAttribute("salarys", salarys);
         model.addAttribute("components", components);
-        return "salary/salary-all";
+        model.addAttribute("sumTotal", sumTotal);
+        model.addAttribute("annee", 2025);
+        return "salary/statistic";
+    }
+
+    @PostMapping("/statistic")
+    public String showStatistic(
+        @CookieValue(name = "sid", required = true) String sid,
+        @RequestParam(required = false) Integer annee,
+        Model model
+    ){
+        int anneeValue = (annee != null) ? annee : Year.now().getValue();
+
+        List<SalarySlipDTO> salarys = salarySlipService.getSalarySlip(sid);
+        salarys = salarySlipService.completeSalarySlip(sid, salarys);
+        salarys = salarySlipService.statistic(sid, salarys, anneeValue);
+        SalarySlipDTO sumTotal = salarySlipService.sumSalarySlip(salarys);
+        List<SalaryComponentDTO> components = salaryComponentService.getSalaryComponent(sid);
+
+        model.addAttribute("salarys", salarys);
+        model.addAttribute("components", components);
+        model.addAttribute("sumTotal", sumTotal);
+        model.addAttribute("annee", anneeValue);
+        return "salary/statistic";
+    }
+
+    @GetMapping("/graph")
+    public String showGraph(
+        @CookieValue(name = "sid", required = true) String sid,
+        Model model
+    ){
+        List<SalarySlipDTO> salarys = salarySlipService.getSalarySlip(sid);
+        salarys = salarySlipService.completeSalarySlip(sid, salarys);
+        salarys = salarySlipService.statistic(sid, salarys, 2025);
+        SalarySlipDTO sumTotal = salarySlipService.sumSalarySlip(salarys);
+        List<SalaryComponentDTO> components = salaryComponentService.getSalaryComponent(sid);
+
+        List<Double> net_pay = new ArrayList<>();
+        for (SalarySlipDTO slip : salarys) {
+            net_pay.add(slip.getNet_pay());
+        }
+
+        List<Double> total_earnings = new ArrayList<>();
+        for (SalarySlipDTO slip : salarys) {
+            total_earnings.add(slip.getTotal_earnings());
+        }
+
+        List<Double> total_deductions = new ArrayList<>();
+        for (SalarySlipDTO slip : salarys) {
+            total_deductions.add(slip.getTotal_deduction());
+        }
+
+        model.addAttribute("net_pay", net_pay);
+        model.addAttribute("total_earnings", total_earnings);
+        model.addAttribute("total_deductions", total_deductions);
+
+        model.addAttribute("salarys", salarys);
+        model.addAttribute("components", components);
+        model.addAttribute("sumTotal", sumTotal);
+        model.addAttribute("annee", 2025);
+        return "salary/salary-graph";
     }
 }
