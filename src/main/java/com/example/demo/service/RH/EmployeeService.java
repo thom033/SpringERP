@@ -1,6 +1,5 @@
 package com.example.demo.service.RH;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -8,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -20,6 +20,8 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.demo.dto.RH.EmployeeDTO;
+import com.example.demo.entity.Employee;
+import com.example.demo.repository.EmployeeRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 
 @Service
@@ -28,6 +30,9 @@ public class EmployeeService {
     public String baseUrl;
 
     private final RestTemplate restTemplate;
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
 
     public EmployeeService (RestTemplate restTemplate){
         this.restTemplate = restTemplate;
@@ -145,6 +150,17 @@ public class EmployeeService {
         return employee.getFirst_name() + " " + employee.getLast_name();
     } 
 
+    public List<EmployeeDTO> getEmployeeByRef(String sid, String ref) throws Exception {
+        List<EmployeeDTO> allEmployees = getEmployee(sid);
+        List<EmployeeDTO> filteredEmployees = new ArrayList<>();
+        for (EmployeeDTO employee : allEmployees) {
+            if (employee.getRef() != null && employee.getRef().equalsIgnoreCase(ref)) {
+                filteredEmployees.add(employee);
+            }
+        }
+        return filteredEmployees;
+    }
+
     public List<EmployeeDTO> filterEmployeeByName(String sid, String employeeName, List<EmployeeDTO> list){
         List<EmployeeDTO> val = new ArrayList<>();
         for (EmployeeDTO employee : list) {
@@ -164,7 +180,8 @@ public class EmployeeService {
         }
         return val;
     }
-    public void createEmployee(String sid, EmployeeDTO employeeDTO) throws Exception {
+    
+     void createEmployee(String sid, EmployeeDTO employeeDTO) throws Exception {
         String url = baseUrl + "/api/resource/Employee";
         JSONObject json = new JSONObject();
         json.put("doctype", "Employee");
@@ -203,22 +220,34 @@ public class EmployeeService {
             createEmployee(sid, employeeDTO);
         }
     }
-
-    public List<EmployeeDTO> getEmployeeByRef(String sid, String ref) throws Exception{
-        List<EmployeeDTO> allEmployees = getEmployee(sid);
-        List<EmployeeDTO> filteredEmployees = new ArrayList<>();
-        for (EmployeeDTO employee : allEmployees) {
-            if (employee.getRef() != null && employee.getRef().equalsIgnoreCase(ref)) {
-                filteredEmployees.add(employee);
-            }
-        }
-        return filteredEmployees;
-    }
     
     private String getTextValue(JsonNode node, String fieldName) {
         return node.has(fieldName) ? node.get(fieldName).asText() : null;
     }
 
-    
+    public List<Employee> findAll(){
+        List<Employee> employees = new ArrayList<>();
+        try {
+            System.out.println("EmployeeService method : findAll");
+            employees = employeeRepository.findAll();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("vita tsy nisy exception");
+        return employees;
+    }
 
+    public static void main(String[] args) {
+        // Exemple d'utilisation
+        RestTemplate restTemplate = new RestTemplate();
+        EmployeeService service = new EmployeeService(restTemplate);
+        String sid = "d647ebdb4c147aaac47f38725db32541f14afd57a25a6f370dffa9af";
+        String baseUrl = "http://erpnext.localhost:8000";
+        service.baseUrl = baseUrl;
+
+        List<Employee> employees = service.findAll();
+        for (Employee employee : employees) {
+            System.out.println("Employee name :" + employee.getName());
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package com.example.demo.service.RH;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.json.JSONObject;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.example.demo.dto.RH.CompanyDTO;
 import com.example.demo.dto.RH.EmployeeDTO;
 import com.example.demo.dto.RH.SalaryStructureAssignmentDTO;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,15 +23,83 @@ import com.fasterxml.jackson.databind.JsonNode;
 @Service
 public class SalaryStructureAssignmentService {
     @Value("${erpnext.base-url}")
-    private String baseUrl;
+    public String baseUrl;
 
-    private final RestTemplate restTemplate;
+    public final RestTemplate restTemplate;
 
     @Autowired
     public EmployeeService employeeService;
 
+    @Autowired
+    public CompanyService companyService;
+
     public SalaryStructureAssignmentService (RestTemplate restTemplate){
         this.restTemplate = restTemplate;
+    }
+
+    public List<SalaryStructureAssignmentDTO> getAssignmentsbyEmployee(String sid, String EmpName){
+        List<SalaryStructureAssignmentDTO> all = getAssignments(sid);
+
+        List<SalaryStructureAssignmentDTO> val = new ArrayList<>();
+
+        for (SalaryStructureAssignmentDTO assignement : all) {
+            if (assignement.getEmployee().equals(EmpName)) {
+                val.add(assignement);
+            }
+        }
+
+        return val;
+    }
+
+    public List<SalaryStructureAssignmentDTO> getAssignments(String sid){
+        System.out.println("MAMPIASA GET SALARY STRUCTURE ASSIGNEMENT");
+        List<SalaryStructureAssignmentDTO> assignments = new ArrayList<>();
+        try {
+            String doctype = "Salary Structure Assignment";
+            String fields = "[\"*\"]"; // Un tableau vide signifie tous les champs dans Frappe/ERPNext
+            String filter = "[]";
+
+            String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter + "&limit=0";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Cookie", "sid=" + sid);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                JsonNode.class
+            );
+
+            if (response.getBody() != null && response.getBody().has("data")) {
+                JsonNode data = response.getBody().get("data");
+                for (JsonNode salary : data) {
+                    SalaryStructureAssignmentDTO dto = new SalaryStructureAssignmentDTO();
+                    dto.setName(getTextValue(salary, "name"));
+                    dto.setEmployee(getTextValue(salary, "employee"));
+                    dto.setSalary_structure(getTextValue(salary, "salary_structure"));
+                    dto.setFrom_date(LocalDate.parse(getTextValue(salary, "from_date")));
+                    dto.setBase(getTextValue(salary, "base"));
+                    dto.setCurrency(getTextValue(salary,"currency"));
+                    dto.setCompany(getTextValue(salary,"company"));
+                    
+
+                    assignments.add(dto);
+                }
+            }
+
+            System.out.println("Liste des Slary Structure récupérés :");
+            for (SalaryStructureAssignmentDTO emp : assignments) {
+                System.out.println("SSA Name: " +emp.getName());
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des Salary Slip : " + e.getMessage());
+            e.printStackTrace();
+        }
+        return assignments;
     }
 
     public void createSalaryStructureAssignement(String sid, SalaryStructureAssignmentDTO salaryStructureAssignment) throws Exception {
@@ -41,14 +111,16 @@ public class SalaryStructureAssignmentService {
         salaryStructureAssignment.setEmployee(employee.getName());
         salaryStructureAssignment.setCompany(employee.getCompany());
 
+        CompanyDTO company = companyService.getCompanyByName(sid, salaryStructureAssignment.getCompany());
+
         JSONObject json = new JSONObject();
         json.put("doctype", "Salary Structure Assignment");
         json.put("employee_ref", salaryStructureAssignment.getEmployee_ref());
         json.put("salary_structure", salaryStructureAssignment.getSalary_structure());
         json.put("base", salaryStructureAssignment.getBase());
-        json.put("payroll_payable_account", "Payroll Payable - MC");
+        json.put("payroll_payable_account", "Payroll Payable - " + company.getAbbr());
         json.put("currency", salaryStructureAssignment.getCurrency());
-        json.put("company", salaryStructureAssignment.getCompany());
+        json.put("company", company.getCompany_name());
         json.put("employee", salaryStructureAssignment.getEmployee());
         json.put("employee_name", employee.getFirst_name() + " " + employee.getLast_name());
         json.put("docstatus", "1");
@@ -116,6 +188,23 @@ public class SalaryStructureAssignmentService {
             return false;
         }
     }
+
+    // public SalaryStructureAssignmentDTO getLastAssignement(String sid, EmployeeDTO employee, LocalDate postingDate, List<SalaryStructureAssignmentDTO> assignments){
+    //     List<SalaryStructureAssignmentDTO> all = getAssignmentsbyEmployee(sid,employee.getName());
+    //     List<SalaryStructureAssignmentDTO> before = new ArrayList<>();
+    //     for (SalaryStructureAssignmentDTO assignment : all) {
+    //         if(assignment.getFrom_date().isBefore(postingDate)){
+    //             before.add(assignment);
+    //         }
+    //     }
+    //     return before.getLast();
+    // }
+
+    private String getTextValue(JsonNode node, String fieldName) {
+        return node.has(fieldName) ? node.get(fieldName).asText() : null;
+    }
+    
+    
 
     public static void main(String[] args) {
         // Exemple d'utilisation

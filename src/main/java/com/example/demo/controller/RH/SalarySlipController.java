@@ -1,9 +1,11 @@
 package com.example.demo.controller.RH;
 
 import java.io.OutputStream;
+import java.time.LocalDate;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -21,6 +23,8 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 import com.example.demo.dto.RH.EmployeeDTO;
 import com.example.demo.dto.RH.SalaryComponentDTO;
 import com.example.demo.dto.RH.SalarySlipDTO;
+import com.example.demo.dto.RH.SalaryStructureAssignmentDTO;
+import com.example.demo.dto.RH.SalaryStructureDTO;
 import com.example.demo.service.RH.EmployeeService;
 import com.example.demo.service.RH.SalaryComponentService;
 import com.example.demo.service.RH.SalarySlipService;
@@ -159,6 +163,7 @@ public class SalarySlipController {
         Model model
     ){
         List<SalarySlipDTO> salarys = salarySlipService.getSalarySlip(sid);
+        System.out.println("Ok get all aloha");
         salarys = salarySlipService.completeSalarySlip(sid, salarys);
         salarys = salarySlipService.statistic(sid, salarys, 2025);
         SalarySlipDTO sumTotal = salarySlipService.sumSalarySlip(salarys);
@@ -227,5 +232,114 @@ public class SalarySlipController {
         model.addAttribute("sumTotal", sumTotal);
         model.addAttribute("annee", 2025);
         return "salary/salary-graph";
+    }
+
+    @GetMapping("/generate")
+    public String showSalaryForm(
+        @CookieValue(name = "sid", required = true) String sid,
+        Model model
+    ){
+
+        List<EmployeeDTO> employees = new ArrayList<>();
+        try {
+            employees = employeeService.getEmployee(sid);
+        } catch (Exception e) {
+            e.printStackTrace();
+            employees = List.of();
+        }
+        
+
+        model.addAttribute("employees", employees);
+        return "salary/salary-generate";
+    }
+
+    @PostMapping("/generate")
+    public String submitSalaryForm(
+        @CookieValue(name = "sid", required = true) String sid,
+        @RequestParam LocalDate debut, 
+        @RequestParam LocalDate fin,
+        @RequestParam String name,
+        @RequestParam Integer base,
+        Model model
+    ){
+
+        System.out.println(debut);
+        System.out.println(fin);
+        System.out.println("emp ======= "+name);
+        System.out.println("base ======= "+base);
+
+        int moisDebut = debut.getMonthValue();
+        int moisFin = fin.getMonthValue();
+
+        int diff = moisFin - moisDebut;
+        System.out.println("MOis deb :" + moisDebut);
+        System.out.println("Mois fin : " + moisFin);
+        System.out.println(diff);
+
+        try{
+            EmployeeDTO emp = employeeService.getEmployeeByName(sid, name);
+
+            // List<SalaryComponentDTO> ear = new ArrayList<>();
+            // SalaryComponentDTO salaire_base = salaryComponentService.getSalaryComponentByName(sid, "Salaire Base");
+            // ear.add(ear);
+
+            // SalaryStructureDTO struct = new SalaryStructureDTO();
+            // struct.setName("Generate");
+            // struct.setCompany(emp.getCompany());
+            // struct.setIs_active("Yes");
+            // struct.setIs_default("Yes");
+            // struct.setCurrency("ALL");
+            // struct.setDocstatus("1");
+
+
+            SalaryStructureAssignmentDTO assignemt = new SalaryStructureAssignmentDTO();
+            assignemt.setBase(base.toString());
+            assignemt.setEmployee(name);
+            assignemt.setFrom_date(debut);
+            assignemt.setEmployee(emp.getName());
+            assignemt.setEmployee_ref(emp.getRef());
+            assignemt.setCurrency("ALL");
+            assignemt.setCompany(emp.getCompany());
+
+            LocalDate addDate = debut;
+            for (int i = 0; i <= diff ; i++) {
+                System.out.println("Mandalo " + i);
+                
+                SalarySlipDTO slip = new SalarySlipDTO(emp.getName(),addDate,"g1",emp.getCompany());
+                salarySlipService.createSalarySlip(sid, slip);
+                addDate = addDate.plusMonths(1);
+                System.out.println("xxxxxxxxx");
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        List<EmployeeDTO> employees = new ArrayList<>();
+        try {
+            employees = employeeService.getEmployee(sid);
+        } catch (Exception e) {
+            e.printStackTrace();
+            employees = List.of();
+        }
+        
+
+        model.addAttribute("employees", employees);
+        return "salary/salary-generate";
+    }
+
+    @GetMapping("/update-base")
+    public String updateBaseForm(
+        @CookieValue(name = "sid", required = true) String sid,
+        Model model
+    ){
+        List<SalaryComponentDTO> components = new ArrayList<>();
+        try {
+            components = salaryComponentService.getSalaryComponent(sid);
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+
+        model.addAttribute("components", components);
+        return "salary/update-base";
     }
 }

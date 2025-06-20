@@ -41,11 +41,68 @@ public class SalarySlipService {
     }
     
     public List<SalarySlipDTO> getSalarySlip(String sid){
+        System.out.println("MAMPIASA GET SALARY SLIP");
         List<SalarySlipDTO> salarys = new ArrayList<>();
         try {
             String doctype = "Salary Slip";
             String fields = "[\"*\"]"; // Un tableau vide signifie tous les champs dans Frappe/ERPNext
             String filter = "[]";
+
+            String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter + "&limit=0";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Cookie", "sid=" + sid);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                JsonNode.class
+            );
+
+            if (response.getBody() != null && response.getBody().has("data")) {
+                JsonNode data = response.getBody().get("data");
+                for (JsonNode salary : data) {
+                    SalarySlipDTO dto = new SalarySlipDTO();
+                    dto.setName(getTextValue(salary, "name"));
+                    dto.setEmployee(getTextValue(salary, "employee"));
+                    dto.setEmployee_name(getTextValue(salary, "employee_name"));
+                    dto.setCompany(getTextValue(salary, "company"));
+                    dto.setPosting_date(LocalDate.parse(getTextValue(salary, "posting_date")));
+                    dto.setCurrency(getTextValue(salary, "currency"));
+                    dto.setExchange_rate(Double.parseDouble(getTextValue(salary, "exchange_rate")));
+                    dto.setSalary_structure(getTextValue(salary, "salary_structure"));
+                    dto.setTotal_working_days(Double.parseDouble(getTextValue(salary, "total_working_days")));
+                    dto.setPayment_days(Double.parseDouble(getTextValue(salary, "payment_days")));
+                    dto.setNet_pay(Double.parseDouble(getTextValue(salary, "net_pay")));
+                    dto.setTotal_earnings(Double.parseDouble(getTextValue(salary, "total_earnings")));
+                    dto.setTotal_deduction(Double.parseDouble(getTextValue(salary, "total_deduction")));
+                    dto.setGross_pay(Double.parseDouble(getTextValue(salary, "gross_pay")));
+
+                    salarys.add(dto);
+                }
+            }
+
+            System.out.println("Liste des Slary Slip récupérés :");
+            for (SalarySlipDTO emp : salarys) {
+                System.out.println("SalarySLIP Name: " +emp.getName());
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des Salary Slip : " + e.getMessage());
+            e.printStackTrace();
+        }
+        return salarys;
+    }
+    
+    public List<SalarySlipDTO> getSalarySlip(String sid,String Employee){
+        List<SalarySlipDTO> salarys = new ArrayList<>();
+        try {
+            String doctype = "Salary Slip";
+            String fields = "[\"*\"]"; // Un tableau vide signifie tous les champs dans Frappe/ERPNext
+            String filter = "[[\"employee\" , \"=\" , \"" +Employee+"\"]]";
 
             String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter + "&limit=0";
 
@@ -95,7 +152,7 @@ public class SalarySlipService {
         }
         return salarys;
     }
-    
+
     public List<SalarySlipDTO> completeSalarySlip(String sid, List<SalarySlipDTO> salarys) {
         List<SalarySlipDTO> completeSalarys = new ArrayList<>();
         try {
@@ -188,62 +245,6 @@ public class SalarySlipService {
         total.setEarnings(earnings);
         total.setDeductions(deductions);
         return total;
-    }
-    
-    public List<SalarySlipDTO> getSalarySlip(String sid,String Employee){
-        List<SalarySlipDTO> salarys = new ArrayList<>();
-        try {
-            String doctype = "Salary Slip";
-            String fields = "[\"*\"]"; // Un tableau vide signifie tous les champs dans Frappe/ERPNext
-            String filter = "[[\"employee\" , \"=\" , \"" +Employee+"\"]]";
-
-            String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter + "&limit=0";
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Cookie", "sid=" + sid);
-            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            ResponseEntity<JsonNode> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                entity,
-                JsonNode.class
-            );
-
-            if (response.getBody() != null && response.getBody().has("data")) {
-                JsonNode data = response.getBody().get("data");
-                for (JsonNode salary : data) {
-                    SalarySlipDTO dto = new SalarySlipDTO();
-                    dto.setName(getTextValue(salary, "name"));
-                    dto.setEmployee(getTextValue(salary, "employee"));
-                    dto.setEmployee_name(getTextValue(salary, "employee_name"));
-                    dto.setCompany(getTextValue(salary, "company"));
-                    dto.setPosting_date(LocalDate.parse(getTextValue(salary, "posting_date")));
-                    dto.setCurrency(getTextValue(salary, "currency"));
-                    dto.setExchange_rate(Double.parseDouble(getTextValue(salary, "exchange_rate")));
-                    dto.setSalary_structure(getTextValue(salary, "salary_structure"));
-                    dto.setTotal_working_days(Double.parseDouble(getTextValue(salary, "total_working_days")));
-                    dto.setPayment_days(Double.parseDouble(getTextValue(salary, "payment_days")));
-                    dto.setNet_pay(Double.parseDouble(getTextValue(salary, "net_pay")));
-                    dto.setTotal_earnings(Double.parseDouble(getTextValue(salary, "total_earnings")));
-                    dto.setTotal_deduction(Double.parseDouble(getTextValue(salary, "total_deduction")));
-                    dto.setGross_pay(Double.parseDouble(getTextValue(salary, "gross_pay")));
-
-                    salarys.add(dto);
-                }
-            }
-
-            System.out.println("Liste des Slary Slip récupérés :");
-            for (SalarySlipDTO emp : salarys) {
-                System.out.println(emp);
-            }
-        } catch (Exception e) {
-            System.err.println("Erreur lors de la récupération des Salary Slip : " + e.getMessage());
-            e.printStackTrace();
-        }
-        return salarys;
     }
     
     public SalarySlipDTO getSalarySlipbyName(String sid, String salarySlipName){
@@ -416,12 +417,18 @@ public class SalarySlipService {
     }
 
     public List<SalarySlipDTO> statistic(String sid, List<SalarySlipDTO> list, int annee){
+        System.out.println("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
+        System.out.println("MAPIASA SATISTIC");
         List<SalarySlipDTO> val = new ArrayList<>();
         for (int i = 1; i < 13; i++) {
             SalarySlipDTO total = sumSalarySlip(getSalarySlipByMonth(sid, list, i, annee));
             val.add(total);
         }
+        System.out.println("taille val: "+val.size());
+        System.out.println("VITA NY STATISTIC");
+        System.out.println("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
         return val;
+        
     }
 
     public void printSalarySlip(String sid){
