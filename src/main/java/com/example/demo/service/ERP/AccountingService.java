@@ -311,7 +311,7 @@ public class AccountingService {
             System.err.println("Error getting payment account: " + e.getMessage());
         }
         
-        return "Cash - SC";  // Changer le compte par défaut à Cash - SC
+        return "Cash - MC";  // Changer le compte par défaut à Cash - MC
     }
 
     public List<InvoiceDTO> getRecentInvoices(String sid, int limit) {

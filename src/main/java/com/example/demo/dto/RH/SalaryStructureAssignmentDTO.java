@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class SalaryStructureAssignmentDTO {
+    String name;
     String employee_ref;
     String salary_structure;
     LocalDate from_date;

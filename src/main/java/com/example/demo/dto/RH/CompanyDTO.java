@@ -9,4 +9,10 @@ public class CompanyDTO {
     String abbr;
     String default_currency;
     String country;
+
+    String default_holiday_list;
+
+    public CompanyDTO(){
+        this.default_holiday_list = "Holiday Test";
+    }
 }

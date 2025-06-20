@@ -151,7 +151,7 @@ public class ImportService {
 
                     companyService.createCompany(sid, newCompany);
 
-                    errors.add("Fichier : " +csvFilePath+ "->Company inexistate a la ligne " + row + ": " + fields[6]);
+                    // errors.add("Fichier : " +csvFilePath+ "->Company inexistate a la ligne " + row + ": " + fields[6]);
                 }
             }
         } catch (Exception e) {
