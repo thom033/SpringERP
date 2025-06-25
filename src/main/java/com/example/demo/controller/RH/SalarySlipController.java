@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -24,10 +23,10 @@ import com.example.demo.dto.RH.EmployeeDTO;
 import com.example.demo.dto.RH.SalaryComponentDTO;
 import com.example.demo.dto.RH.SalarySlipDTO;
 import com.example.demo.dto.RH.SalaryStructureAssignmentDTO;
-import com.example.demo.dto.RH.SalaryStructureDTO;
 import com.example.demo.service.RH.EmployeeService;
 import com.example.demo.service.RH.SalaryComponentService;
 import com.example.demo.service.RH.SalarySlipService;
+import com.example.demo.service.RH.SalaryStructureAssignmentService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -45,6 +44,9 @@ public class SalarySlipController {
 
     @Autowired 
     private SalaryComponentService salaryComponentService;
+
+    @Autowired
+    private SalaryStructureAssignmentService salaryStructureAssignmentService;
 
 
     @GetMapping("/{EmployeeId}")
@@ -262,7 +264,6 @@ public class SalarySlipController {
         @RequestParam Integer base,
         Model model
     ){
-
         System.out.println(debut);
         System.out.println(fin);
         System.out.println("emp ======= "+name);
@@ -279,36 +280,41 @@ public class SalarySlipController {
         try{
             EmployeeDTO emp = employeeService.getEmployeeByName(sid, name);
 
-            // List<SalaryComponentDTO> ear = new ArrayList<>();
-            // SalaryComponentDTO salaire_base = salaryComponentService.getSalaryComponentByName(sid, "Salaire Base");
-            // ear.add(ear);
-
-            // SalaryStructureDTO struct = new SalaryStructureDTO();
-            // struct.setName("Generate");
-            // struct.setCompany(emp.getCompany());
-            // struct.setIs_active("Yes");
-            // struct.setIs_default("Yes");
-            // struct.setCurrency("ALL");
-            // struct.setDocstatus("1");
-
-
-            SalaryStructureAssignmentDTO assignemt = new SalaryStructureAssignmentDTO();
-            assignemt.setBase(base.toString());
-            assignemt.setEmployee(name);
-            assignemt.setFrom_date(debut);
-            assignemt.setEmployee(emp.getName());
-            assignemt.setEmployee_ref(emp.getRef());
-            assignemt.setCurrency("ALL");
-            assignemt.setCompany(emp.getCompany());
-
             LocalDate addDate = debut;
+            
             for (int i = 0; i <= diff ; i++) {
-                System.out.println("Mandalo " + i);
-                
-                SalarySlipDTO slip = new SalarySlipDTO(emp.getName(),addDate,"g1",emp.getCompany());
-                salarySlipService.createSalarySlip(sid, slip);
+                System.out.println("Mandalo ato anaty boucle in :" + i );
+
+                SalaryStructureAssignmentDTO assignment = new SalaryStructureAssignmentDTO();
+                assignment.setBase(base.toString());
+                assignment.setFrom_date(addDate);
+                assignment.setEmployee(emp.getName());
+                assignment.setEmployee_ref(emp.getRef());
+                assignment.setCompany(emp.getCompany());
+                assignment.setSalary_structure("g1");
+
+                if(base != 0){
+                    List<SalaryStructureAssignmentDTO> assignments = new ArrayList<>();
+                    assignments.add(assignment);
+                    // if (!salaryStructureAssignmentService.duplicateAssignment(assignments, assignment)) {
+                        salaryStructureAssignmentService.saveAssignments(sid, assignments);
+                    // }
+                    // else {
+                        // System.out.println("Efa misy Assignment");
+                        // System.out.println("Assignment already exists for " + assignment.getEmployee());
+                    // }
+                }
+
+                List<SalarySlipDTO> slips = salarySlipService.getSalarySlip(sid);
+                SalarySlipDTO slip = salarySlipService.generateSalarySlip(sid, assignment);
+                if (!salarySlipService.duplicateSalarySlip(slips, slip)) {
+                    salarySlipService.createSalarySlip(sid, slip);
+                }
+                else {
+                    System.out.println("Efa misy Slip");
+                    System.out.println("Slip already exists for " + slip.getName());
+                }
                 addDate = addDate.plusMonths(1);
-                System.out.println("xxxxxxxxx");
             }
         }catch(Exception e){
             e.printStackTrace();
@@ -332,6 +338,132 @@ public class SalarySlipController {
         @CookieValue(name = "sid", required = true) String sid,
         Model model
     ){
+        List<SalaryComponentDTO> components = new ArrayList<>();
+        try {
+            components = salaryComponentService.getSalaryComponent(sid);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        model.addAttribute("components", components);
+        return "salary/update-base";
+    }
+
+    @PostMapping("/update-base")
+    public String SubmitBaseFormCondition(
+        @CookieValue(name = "sid", required = true) String sid,
+        @RequestParam String component,
+        @RequestParam String condition,
+        @RequestParam Integer amount,
+        Model model
+    ){
+        System.out.println("component :" + component);
+        System.out.println("condition :" + condition);
+        System.out.println("amount :" + amount);
+
+        List<SalarySlipDTO> slips = salarySlipService.getSalarySlipCondition(sid, component, condition, amount);
+        
+        List<SalaryComponentDTO> components = new ArrayList<>();
+        try {
+            components = salaryComponentService.getSalaryComponent(sid);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        model.addAttribute("component", component);
+        model.addAttribute("condition", condition);
+        model.addAttribute("amount", amount);
+
+        model.addAttribute("components", components);
+        model.addAttribute("salarys", slips);
+        return "salary/update-base";
+    }
+
+    @PostMapping("/update-base/unit")
+    public String SubmitBaseFormUnit(
+        @CookieValue(name = "sid", required = true) String sid,
+        @RequestParam String component,
+        @RequestParam String condition,
+        @RequestParam Integer amount,
+        @RequestParam Integer value,
+        @RequestParam String slip,
+        Model model
+    ){
+        System.out.println("component :" + component);
+        System.out.println("condition :" + condition);
+        System.out.println("amount :" + amount);
+        System.out.println("value :" + value);
+        System.out.println("slip :" + slip);
+
+        SalarySlipDTO slipDTO = salarySlipService.getSalarySlipbyName(sid, slip);
+        List<SalarySlipDTO> slips = new ArrayList<>();
+        slips.add(slipDTO);
+        slips = salarySlipService.newSalaireBase(slips, value);
+        salarySlipService.cancelList(sid, slips);
+        // salarySlipService.deleteList(sid, slips);
+
+        List<SalaryStructureAssignmentDTO> assignmentsTaloha = salaryStructureAssignmentService.getAssignmentsbyEmployeeAndFromDate(sid, slips);
+        salaryStructureAssignmentService.cancelList(sid, assignmentsTaloha);
+        // salaryStructureAssignmentService.deleteList(sid, assignmentsTaloha);
+
+        List<SalaryStructureAssignmentDTO> assignments = salaryStructureAssignmentService.returnAssignments(sid, slips);
+        salaryStructureAssignmentService.saveAssignments(sid,assignments);
+
+        List<SalarySlipDTO> salarySlips = salarySlipService.generateSalarySlip(sid,assignments);
+        System.out.println("OK VITA NY GENERATE");
+        
+        salarySlipService.saveSalarySlip(sid, salarySlips);
+
+        List<SalaryComponentDTO> components = new ArrayList<>();
+        try {
+            components = salaryComponentService.getSalaryComponent(sid);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        model.addAttribute("components", components);
+        return "salary/update-base";
+    }
+
+    @PostMapping("/update-base/all")
+    public String SubmitBaseForm(
+        @CookieValue(name = "sid", required = true) String sid,
+        @RequestParam String component,
+        @RequestParam String condition,
+        @RequestParam Integer amount,
+        @RequestParam Integer value,
+        Model model
+    ){
+        System.out.println("component :" + component);
+        System.out.println("condition :" + condition);
+        System.out.println("amount :" + amount);
+        System.out.println("value :" + value);
+
+        List<SalarySlipDTO> slips = salarySlipService.getSalarySlipCondition(sid, component, condition, amount);
+        slips = salarySlipService.newSalaireBase(slips, value);
+        System.out.println("Cancel Slip");
+        salarySlipService.cancelList(sid, slips);
+        // salarySlipService.deleteList(sid, slips);
+
+        List<SalaryStructureAssignmentDTO> assignmentsTaloha = salaryStructureAssignmentService.getAssignmentsbyEmployeeAndFromDate(sid, slips);
+        System.out.println("Cancel Assignement");
+        salaryStructureAssignmentService.cancelList(sid, assignmentsTaloha);
+        salaryStructureAssignmentService.deleteList(sid, assignmentsTaloha);
+
+        List<SalaryStructureAssignmentDTO> assignments = salaryStructureAssignmentService.returnAssignments(sid, slips);
+        salaryStructureAssignmentService.saveAssignments(sid,assignments);
+
+        List<SalarySlipDTO> salarySlips = salarySlipService.generateSalarySlip(sid,assignments);
+        System.out.println("OK VITA NY GENERATE");
+        
+        salarySlipService.saveSalarySlip(sid, salarySlips);
+
+        System.out.println("ccccccccccccccccccccccccccccccccccccccccccc");
+        for (SalarySlipDTO slip : slips) {
+            System.out.println(slip.getName());
+        }
+        System.out.println("ccccccccccccccccccccccccccccccccccccccccccc");
+
         List<SalaryComponentDTO> components = new ArrayList<>();
         try {
             components = salaryComponentService.getSalaryComponent(sid);

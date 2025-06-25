@@ -1,8 +1,6 @@
 package com.example.demo.service.RH;
 
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjuster;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +19,8 @@ import com.example.demo.dto.RH.EmployeeDTO;
 import com.example.demo.dto.RH.SalaryDetailDTO;
 import com.example.demo.dto.RH.SalarySlipDTO;
 import com.example.demo.dto.RH.SalaryStructureAssignmentDTO;
+import com.example.demo.entity.SalarySlip;
+import com.example.demo.entity.SalaryStructureAssignment;
 import com.fasterxml.jackson.databind.JsonNode;
 
 @Service
@@ -46,7 +46,7 @@ public class SalarySlipService {
         try {
             String doctype = "Salary Slip";
             String fields = "[\"*\"]"; // Un tableau vide signifie tous les champs dans Frappe/ERPNext
-            String filter = "[]";
+            String filter = "[[\"docstatus\",\"=\",1]]";
 
             String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter + "&limit=0";
 
@@ -85,15 +85,18 @@ public class SalarySlipService {
                     salarys.add(dto);
                 }
             }
-
-            System.out.println("Liste des Slary Slip récupérés :");
-            for (SalarySlipDTO emp : salarys) {
-                System.out.println("SalarySLIP Name: " +emp.getName());
-            }
+            
+            // System.out.println("Liste des Slary Slip récupérés :");
+            // for (SalarySlipDTO emp : salarys) {
+            //     System.out.println("SalarySLIP Name: " +emp.getName());
+            // }
         } catch (Exception e) {
             System.err.println("Erreur lors de la récupération des Salary Slip : " + e.getMessage());
             e.printStackTrace();
         }
+
+        System.out.println(salarys.size() + " Salary Slip(s) found.");
+
         return salarys;
     }
     
@@ -157,15 +160,9 @@ public class SalarySlipService {
         List<SalarySlipDTO> completeSalarys = new ArrayList<>();
         try {
             for (SalarySlipDTO salary : salarys) {
-                SalarySlipDTO dto = getSalarySlipbyName(sid, salary.getName());
-                completeSalarys.add(dto);
+                salary = getSalarySlipbyName(sid, salary.getName());
+                completeSalarys.add(salary);
             }
-            System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-            System.out.println("Liste des Slary Slip complétés :");
-            for (SalarySlipDTO emp : completeSalarys) {
-                System.out.println(emp);
-            }
-            System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
         } catch (Exception e) {
             System.err.println("Erreur lors de la récupération des Salary Slip : " + e.getMessage());
             e.printStackTrace();
@@ -312,10 +309,10 @@ public class SalarySlipService {
                 dto.setTotal_earnings(amountEarning);
             }
 
-            System.out.println("-------------------------------------");
-            System.out.println("Slary Slip récupérés BY NAME :");
-            System.out.println(dto);
-            System.out.println("--------------------------------------");
+            // System.out.println("-------------------------------------");
+            // System.out.println("Slary Slip récupérés BY NAME :");
+            // System.out.println(dto);
+            // System.out.println("--------------------------------------");
         } catch (Exception e) {
             System.err.println("Erreur lors de la récupération des Salary Slip : " + e.getMessage());
             e.printStackTrace();
@@ -327,89 +324,91 @@ public class SalarySlipService {
         return node.has(fieldName) ? node.get(fieldName).asText() : null;
     }
         
+    public SalarySlipDTO generateSalarySlip(String sid, SalaryStructureAssignmentDTO assignment){
+        System.out.println("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+        System.out.println("Method: Salary Slip Service : generateSalarySlip List ");
+        SalarySlipDTO slip = new SalarySlipDTO();
+        try {
+            String employeeRef = assignment.getEmployee_ref();
+            System.out.println("Employee Reference: " + employeeRef);
+            List<EmployeeDTO> emps = employeeService.getEmployeeByRef(sid, employeeRef);
+            EmployeeDTO emp = emps.get(0);
+            
+            String employee_name = emp.getName();
+            String employee_full_name = emp.getFirst_name() + " " + emp.getLast_name();
+            LocalDate posting_date = assignment.getFrom_date();
+            String salary_structure = assignment.getSalary_structure();
+            String company = assignment.getCompany();
+
+            slip = new SalarySlipDTO(employee_name,posting_date, salary_structure,company);
+            slip.setEmployee_name(employee_full_name);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        // System.out.println(slips);
+        System.out.println("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+        return slip;
+    }
+
     public List<SalarySlipDTO> generateSalarySlip(String sid, List<SalaryStructureAssignmentDTO> assignments) {
         System.out.println("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-        System.out.println("MAMPIASA GENERATE SLIP");
+        System.out.println("Method: Salary Slip Service : generateSalarySlip List ");
         List<SalarySlipDTO> slips = new ArrayList<>();
         try {
             
             for (SalaryStructureAssignmentDTO assignment : assignments) {
-                String employeeRef = assignment.getEmployee_ref();
-                System.out.println("Employee Reference: " + employeeRef);
-                List<EmployeeDTO> emps = employeeService.getEmployeeByRef(sid, employeeRef);
-                EmployeeDTO emp = emps.get(0);
-                
-                String employee_name = emp.getName();
-                String employee_full_name = emp.getFirst_name() + " " + emp.getLast_name();
-                LocalDate posting_date = assignment.getFrom_date();
-                String salary_structure = assignment.getSalary_structure();
-                String company = assignment.getCompany();
-
-                SalarySlipDTO slip = new SalarySlipDTO(employee_name,posting_date, salary_structure,company);
-                slip.setEmployee_name(employee_full_name);
-
+                SalarySlipDTO slip = generateSalarySlip(sid, assignment);
                 slips.add(slip);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println(slips);
+        System.out.println("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
         return slips;
     }
 
     public void createSalarySlip(String sid, SalarySlipDTO salarySlipDTO) {
-        String url = baseUrl + "/api/resource/Salary Slip";
+        try {
+            String url = baseUrl + "/api/resource/Salary Slip";
 
-        JSONObject json = new JSONObject();
-        json.put("doctype", "Salary Slip");
-        json.put("employee", salarySlipDTO.getEmployee());
-        json.put("employee_name", salarySlipDTO.getEmployee_name());
-        json.put("company", salarySlipDTO.getCompany());
-        json.put("posting_date", salarySlipDTO.getPosting_date().toString()); // yyyy-MM-dd
-        json.put("start_date", salarySlipDTO.getStart_date().toString());     // <-- AJOUTE CETTE LIGNE
-        json.put("end_date", salarySlipDTO.getEnd_date().toString());         // <-- ET CELLE-CI
-        json.put("currency", salarySlipDTO.getCurrency());
-        json.put("exchange_rate", salarySlipDTO.getExchange_rate());
-        json.put("salary_structure", salarySlipDTO.getSalary_structure());
-        json.put("total_working_days", salarySlipDTO.getTotal_working_days());
-        json.put("payment_days", salarySlipDTO.getPayment_days());
+            JSONObject json = new JSONObject();
+            json.put("doctype", "Salary Slip");
+            json.put("employee", salarySlipDTO.getEmployee());
+            json.put("employee_name", salarySlipDTO.getEmployee_name());
+            json.put("company", salarySlipDTO.getCompany());
+            json.put("posting_date", salarySlipDTO.getPosting_date().toString());
+            json.put("start_date", salarySlipDTO.getStart_date().toString());
+            json.put("end_date", salarySlipDTO.getEnd_date().toString());
+            json.put("currency", salarySlipDTO.getCurrency());
+            json.put("exchange_rate", salarySlipDTO.getExchange_rate());
+            json.put("salary_structure", salarySlipDTO.getSalary_structure());
+            json.put("total_working_days", salarySlipDTO.getTotal_working_days());
+            json.put("payment_days", salarySlipDTO.getPayment_days());
+            json.put("docstatus", "1");
 
-        json.put("docstatus", "1");
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Cookie", "sid=" + sid);
+            headers.setContentType(MediaType.APPLICATION_JSON);
 
-        // System.out.println("JSON envoyé à l'API : " + json.toString(4)); // Affichage formaté
+            HttpEntity<String> entity = new HttpEntity<>(json.toString(), headers);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Cookie", "sid=" + sid);
-        headers.setContentType(MediaType.APPLICATION_JSON);
+            ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url,
+                entity,
+                JsonNode.class
+            );
 
-        HttpEntity<String> entity = new HttpEntity<>(json.toString(), headers);
-
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
-            url,
-            entity,
-            JsonNode.class
-        );
-
-        // System.out.println("Response: " + response.getBody().toPrettyString());
-        System.out.println("Slip created:" + salarySlipDTO.getEmployee() + " Pour date:"+ salarySlipDTO.getPosting_date());
+            System.out.println("Slip created:" + salarySlipDTO.getEmployee() + " Pour date:" + salarySlipDTO.getPosting_date());
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la création du Salary Slip pour " + salarySlipDTO.getEmployee() + " : " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public void saveSalarySlip(String sid , List<SalarySlipDTO> salarySlips) {
         try {
             for (SalarySlipDTO salarySlip : salarySlips) {
                 createSalarySlip(sid, salarySlip);
-                // EmployeeDTO employee = employeeService.getEmployeeByName(sid, salarySlip.getEmployee());
-                // String salaryStructure = salarySlip.getSalary_structure();
-                // LocalDate postingDate = salarySlip.getPosting_date();
-                // if(salaryStructureAssignmentService.isAssignmentValid(sid, employee, salaryStructure,postingDate)){
-                //     System.out.println("VALIDDDD Salary Structure Assignment is valid for employee: " + employee.getName());
-                //     System.out.println("CREATING Salary Slip creation for employee: " + employee.getName());
-                //     createSalarySlip(sid, salarySlip);
-                // } else {
-                //     System.out.println("Salary Structure Assignment is not valid for employee: " + employee.getName());
-                //     System.out.println("Skipping Salary Slip creation for employee: " + employee.getName());
-                //     continue;
-                // }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -431,29 +430,120 @@ public class SalarySlipService {
         
     }
 
-    public void printSalarySlip(String sid){
-        String url = baseUrl + "/api/method/hrms.payroll.doctype.salary_slip.salary_slip.get_emp_and_working_day_details";
+    public void cancelSalarySlip(String sid, String salarySlipName) {
+        String url = baseUrl + "/api/resource/Salary Slip/" + salarySlipName + "?run_method=cancel";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", "sid=" + sid);
-        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        JSONObject json = new JSONObject();
-        json.put("salary_slip", "EMP-0001");
-        // json.put("posting_date", "2024-05-31");
-        // json.put("salary_structure", "SAL-STR-0001");
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        HttpEntity<String> entity = new HttpEntity<>(json.toString(), headers);
-
-        ResponseEntity<JsonNode> response = restTemplate.exchange(
+        ResponseEntity<String> response = restTemplate.postForEntity(
             url,
-            HttpMethod.POST,
             entity,
-            JsonNode.class
+            String.class
         );
 
-        System.out.println(response.getBody());
+        System.out.println("Cancel response: " + response.getBody());
+    }
 
+    public void deleteSalarySlip(String sid, String salarySlipName) {
+        String url = baseUrl + "/api/resource/Salary Slip/" + salarySlipName;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+            url,
+            HttpMethod.DELETE,
+            entity,
+            String.class
+        );
+
+        System.out.println("Delete response: " + response.getBody());
+    }
+
+    public List<SalarySlipDTO> getSalarySlipCondition(String sid, String componentNane, String condition, double componentAmount){
+        List<SalarySlipDTO> all = getSalarySlip(sid);
+        all = completeSalarySlip(sid, all);
+
+        List<SalarySlipDTO> val = new ArrayList<>();
+
+        for (SalarySlipDTO unit : all) {
+            for (SalaryDetailDTO detail : unit.getEarnings()) {
+                if (componentNane.equals(detail.getSalary_component())) {
+                    if (condition.equals(">=")) {
+                        if (detail.getAmount() >= componentAmount) {
+                            val.add(unit);
+                        }
+                    }
+                    else if(condition.equals("<=")){
+                        if (detail.getAmount() <= componentAmount) {
+                            val.add(unit);
+                        }
+                    }
+                }
+            }
+        }
+
+        return val;
+    }
+
+    public void cancelList(String sid, List<SalarySlipDTO> list){
+        for (SalarySlipDTO slip : list) {
+            cancelSalarySlip(sid, slip.getName());
+        }
+    }
+
+    public void deleteList(String sid, List<SalarySlipDTO> list){
+        for (SalarySlipDTO slip : list) {
+            deleteSalarySlip(sid, slip.getName());
+        }
+    }
+
+    public List<SalarySlipDTO> newSalaireBase(List<SalarySlipDTO> slips, double pourcent){
+        List<SalarySlipDTO> val = new ArrayList<>(); 
+        for (SalarySlipDTO slip : slips) {
+            val.add(slip);
+        }
+        for (SalarySlipDTO slip : val) {
+            if (pourcent > 0) {
+                for (SalaryDetailDTO detailDTO : slip.getEarnings()) {
+                    if (detailDTO.getSalary_component().equals("Salaire Base")) {
+                        double baseTaloha = detailDTO.getAmount();
+                        double pourcentage = (baseTaloha * pourcent) / 100;
+                        double baseVaovao = baseTaloha + pourcentage;
+                        detailDTO.setAmount(baseVaovao);
+                    }
+                }
+            }
+            else if (pourcent < 0) {
+                for (SalaryDetailDTO detailDTO : slip.getEarnings()) {
+                    if (detailDTO.getSalary_component().equals("Salaire Base")) {
+                        double baseTaloha = detailDTO.getAmount();
+                        pourcent = pourcent * -1;
+                        double pourcentage = (baseTaloha * pourcent) / 100;
+                        double baseVaovao = baseTaloha - pourcentage;
+                        detailDTO.setAmount(baseVaovao);
+                        pourcent = pourcent * -1;
+                    }
+                }
+            }
+        }
+        return val;
+    }
+    
+    public boolean duplicateSalarySlip(List<SalarySlipDTO> slips, SalarySlipDTO slip) {
+        for (SalarySlipDTO existingSlip : slips) {
+            if (existingSlip.getEmployee().equals(slip.getEmployee()) &&
+                String.valueOf(existingSlip.getPosting_date().getMonthValue()).equals(String.valueOf(slip.getPosting_date().getMonthValue()))) {
+                System.out.println("Duplicate found for employee: " + existingSlip.getEmployee() + " in month: " + existingSlip.getPosting_date().getMonthValue());
+                return true; // Duplicate found
+            }
+        }
+        return false; // No duplicate found
     }
     public static void main(String[] args) {
         // Exemple d'utilisation
@@ -463,7 +553,7 @@ public class SalarySlipService {
         String baseUrl = "http://erpnext.localhost:8000";
         service.baseUrl = baseUrl;
 
-        service.printSalarySlip(sid);
+        // service.printSalarySlip(sid);
     }
 
 }

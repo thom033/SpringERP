@@ -39,29 +39,31 @@
             </div>
         </div>
 
-        <div>
-            <form th:action="@{/salary/generate}" class="row g-2 align-items-end mb-3" method="POST">
-                <div class="col-auto">
-                    <div class="col-auto">
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/salary/generate}" class="g-2 align-items-end mb-3" method="POST">
+                    <div>
                         <label for="mois" class="form-label mb-0">Employee</label>
                         <select name="name" class="form-control">
-                            <option value="">-- xxx --</option>
+                            <option value="">-- select an employee --</option>
                             <th:block th:each="employee : ${employees}">
                             <option th:value="${employee.name}" th:text="${employee.first_name}"></option>
                             </th:block>
                         </select>
+                        
+                        <label for="annee" class="form-label mb-0">Debut</label>
+                        <input type="date" id="debut" name="debut" class="form-control"  placeholder="debut">
+
+                        <label for="annee" class="form-label mb-0">Fin</label>
+                        <input type="date" id="fin" name="fin" class="form-control"  placeholder="fin">
+
+                        <label for="annee" class="form-label mb-0">Salaire base</label>
+                        <input type="number" id="base" name="base" class="form-control"  placeholder="base" value="0">
+
+                        <input type="submit" class="btn btn-primary mt-3" value="Generate">
                     </div>
-                    <label for="annee" class="form-label mb-0">Debut</label>
-                    <input type="date" id="debut" name="debut" class="form-control"  placeholder="debut">
-                    <label for="annee" class="form-label mb-0">Fin</label>
-                    <input type="date" id="fin" name="fin" class="form-control"  placeholder="fin">
-                    <label for="annee" class="form-label mb-0">Salaire base</label>
-                    <input type="number" id="base" name="base" class="form-control"  placeholder="base">
-                </div>
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-primary">Filtrer</button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

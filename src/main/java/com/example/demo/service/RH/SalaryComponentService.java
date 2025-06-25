@@ -65,34 +65,14 @@ public class SalaryComponentService {
         }
 
         // Afficher les composants pour vérification
-        System.out.println("---------------------------------------");
-        System.out.println("Salary Components recuperee:");
-        for (SalaryComponentDTO component : components) {
-            System.out.println("Component: " + component);
-        }   
-        System.out.println("---------------------------------------");
+        // System.out.println("---------------------------------------");
+        // System.out.println("Salary Components recuperee:");
+        // for (SalaryComponentDTO component : components) {
+        //     System.out.println("Component: " + component);
+        // }   
+        // System.out.println("---------------------------------------");
 
         return components;
-    }
-
-    public void createSalaryComponent(String sid, SalaryComponentDTO salaryComponentDTO) throws Exception {
-        String url = baseUrl + "/api/resource/Salary Component";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Cookie", "sid=" + sid);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        // Convertir le DTO en JSON automatiquement
-        HttpEntity<SalaryComponentDTO> entity = new HttpEntity<>(salaryComponentDTO, headers);
-
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
-            url,
-            entity,
-            JsonNode.class
-        );
-
-        // System.out.println("Response: " + response.getBody().toPrettyString());
-        System.out.println("Salary Component created : " + salaryComponentDTO.getSalary_component());
     }
 
     public SalaryComponentDTO getSalaryComponentByName(String sid, String name) throws Exception {
@@ -125,6 +105,26 @@ public class SalaryComponentService {
         }
     }
 
+    public void createSalaryComponent(String sid, SalaryComponentDTO salaryComponentDTO) throws Exception {
+        String url = baseUrl + "/api/resource/Salary Component";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Convertir le DTO en JSON automatiquement
+        HttpEntity<SalaryComponentDTO> entity = new HttpEntity<>(salaryComponentDTO, headers);
+
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+            url,
+            entity,
+            JsonNode.class
+        );
+
+        // System.out.println("Response: " + response.getBody().toPrettyString());
+        System.out.println("Salary Component created : " + salaryComponentDTO.getSalary_component());
+    }
+
     public boolean SalaryComponentExist(String sid, String name){
         Boolean exists;
         try {
@@ -133,7 +133,6 @@ public class SalaryComponentService {
         } catch (Exception ex) {
             exists = false;
         }
-
         return exists;
     }
 

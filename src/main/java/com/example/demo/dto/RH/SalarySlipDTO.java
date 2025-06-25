@@ -26,9 +26,9 @@ public class SalarySlipDTO {
     List<SalaryDetailDTO> earnings;
     List<SalaryDetailDTO> deductions;
 
-    public SalarySlipDTO() {
-        // Default constructor
-    }
+    String employee_ref;
+
+    public SalarySlipDTO() {}
     
     public SalarySlipDTO(String employee, LocalDate posting_date, String salary_structure, String company) {
         this.employee = employee;

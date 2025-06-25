@@ -17,6 +17,8 @@ import org.springframework.web.client.RestTemplate;
 
 import com.example.demo.dto.RH.CompanyDTO;
 import com.example.demo.dto.RH.EmployeeDTO;
+import com.example.demo.dto.RH.SalaryDetailDTO;
+import com.example.demo.dto.RH.SalarySlipDTO;
 import com.example.demo.dto.RH.SalaryStructureAssignmentDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -51,13 +53,27 @@ public class SalaryStructureAssignmentService {
         return val;
     }
 
+    public List<SalaryStructureAssignmentDTO> getAssignmentsbyEmployeeAndFromDate(String sid, List<SalarySlipDTO> slips){
+        List<SalaryStructureAssignmentDTO> all = getAssignments(sid);
+
+        List<SalaryStructureAssignmentDTO> val = new ArrayList<>();
+
+        for (SalarySlipDTO slip : slips) {
+            for (SalaryStructureAssignmentDTO assignement : all) {
+                if (assignement.getEmployee().equals(slip.getEmployee()) && assignement.getFrom_date().isEqual(slip.getPosting_date())) {
+                    val.add(assignement);
+                }
+            }
+        }
+        return val;
+    }
+
     public List<SalaryStructureAssignmentDTO> getAssignments(String sid){
-        System.out.println("MAMPIASA GET SALARY STRUCTURE ASSIGNEMENT");
         List<SalaryStructureAssignmentDTO> assignments = new ArrayList<>();
         try {
             String doctype = "Salary Structure Assignment";
             String fields = "[\"*\"]"; // Un tableau vide signifie tous les champs dans Frappe/ERPNext
-            String filter = "[]";
+            String filter = "[[\"docstatus\",\"=\",1]]";
 
             String url = baseUrl + "/api/resource/" + doctype + "?fields=" + fields + "&filters=" + filter + "&limit=0";
 
@@ -91,10 +107,10 @@ public class SalaryStructureAssignmentService {
                 }
             }
 
-            System.out.println("Liste des Slary Structure récupérés :");
-            for (SalaryStructureAssignmentDTO emp : assignments) {
-                System.out.println("SSA Name: " +emp.getName());
-            }
+            // System.out.println("Liste des Slary Structure récupérés :");
+            // for (SalaryStructureAssignmentDTO emp : assignments) {
+            //     System.out.println("SSA Name: " +emp.getName());
+            // }
         } catch (Exception e) {
             System.err.println("Erreur lors de la récupération des Salary Slip : " + e.getMessage());
             e.printStackTrace();
@@ -189,6 +205,17 @@ public class SalaryStructureAssignmentService {
         }
     }
 
+    public boolean duplicateAssignment(List<SalaryStructureAssignmentDTO> assignments, SalaryStructureAssignmentDTO assignment) {
+        for (SalaryStructureAssignmentDTO existingAssignment : assignments) {
+            if (existingAssignment.getEmployee().equals(assignment.getEmployee()) &&
+                String.valueOf(existingAssignment.getFrom_date().getMonthValue()).equals(String.valueOf(assignment.getFrom_date().getMonthValue()))) {
+                System.out.println("Duplicate found for employee: " + existingAssignment.getEmployee() + " in month: " + existingAssignment.getFrom_date().getMonthValue());
+                return true; // Duplicate found
+            }
+        }
+        return false; // No duplicate found
+    }
+
     // public SalaryStructureAssignmentDTO getLastAssignement(String sid, EmployeeDTO employee, LocalDate postingDate, List<SalaryStructureAssignmentDTO> assignments){
     //     List<SalaryStructureAssignmentDTO> all = getAssignmentsbyEmployee(sid,employee.getName());
     //     List<SalaryStructureAssignmentDTO> before = new ArrayList<>();
@@ -204,7 +231,83 @@ public class SalaryStructureAssignmentService {
         return node.has(fieldName) ? node.get(fieldName).asText() : null;
     }
     
+    public SalaryStructureAssignmentDTO returnAssignment(String sid, SalarySlipDTO slip){
+        SalaryStructureAssignmentDTO assignment = new SalaryStructureAssignmentDTO();
+        try {
+            EmployeeDTO emp = employeeService.getEmployeeByName(sid, slip.getEmployee());
+
+            assignment.setSalary_structure(slip.getSalary_structure());
+            assignment.setFrom_date(slip.getPosting_date());
+            for (SalaryDetailDTO detailDTO : slip.getEarnings()) {
+                if (detailDTO.getSalary_component().equals("Salaire Base")) {
+                    assignment.setBase(Double.toString(detailDTO.getAmount()));
+                }
+            }
+            assignment.setCurrency(slip.getCurrency());
+            assignment.setCompany(slip.getCompany());
+            assignment.setEmployee(emp.getName());
+            assignment.setEmployee_ref(emp.getRef());
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+        return assignment;
+    }
+
+    public List<SalaryStructureAssignmentDTO> returnAssignments(String sid, List<SalarySlipDTO> slips){
+        List<SalaryStructureAssignmentDTO> val = new ArrayList<>();
+        for (SalarySlipDTO slip : slips) {
+            SalaryStructureAssignmentDTO assignement = returnAssignment(sid, slip);
+            val.add(assignement);
+        }
+        return val;
+    }
     
+    public void cancelAssignment(String sid, String assignmentName) {
+        String url = baseUrl + "/api/resource/Salary Structure Assignment/" + assignmentName + "?run_method=cancel";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(
+            url,
+            entity,
+            String.class
+        );
+
+        System.out.println("Cancel response: " + response.getBody());
+    }
+
+    public void deleteAssignemnt(String sid, String assignmentName) {
+        String url = baseUrl + "/api/resource/Salary Structure Assignment/" + assignmentName;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+            url,
+            HttpMethod.DELETE,
+            entity,
+            String.class
+        );
+
+        System.out.println("Delete response: " + response.getBody());
+    }
+
+    public void cancelList(String sid, List<SalaryStructureAssignmentDTO> list){
+        for (SalaryStructureAssignmentDTO assignment : list) {
+            cancelAssignment(sid, assignment.getName());
+        }
+    }
+
+    public void deleteList(String sid, List<SalaryStructureAssignmentDTO> list){
+        for (SalaryStructureAssignmentDTO assignment : list) {
+            deleteAssignemnt(sid, assignment.getName());
+        }
+    }
 
     public static void main(String[] args) {
         // Exemple d'utilisation

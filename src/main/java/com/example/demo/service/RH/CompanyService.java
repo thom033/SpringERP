@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.example.demo.dto.RH.CompanyDTO;
+import com.example.demo.dto.RH.CompanyDTO; 
 import com.fasterxml.jackson.databind.JsonNode;
 
 @Service
@@ -97,6 +97,30 @@ public class CompanyService {
 
         // System.out.println("Response: " + response.getBody().toPrettyString());
         System.out.println("Company created:" + companyDTO.getCompany_name());
+    }
+
+    public void deleteCompany(String sid, String companyName) {
+        String url = baseUrl + "/api/resource/Company/" + companyName;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+            url,
+            HttpMethod.DELETE,
+            entity,
+            String.class
+        );
+
+        System.out.println("Delete response: " + response.getBody());
+    }
+
+    public void deleteList(String sid, List<CompanyDTO> list){
+        for (CompanyDTO company : list) {
+            deleteCompany(sid, company.getName());
+        }
     }
 
     private String getTextValue(JsonNode node, String fieldName) {

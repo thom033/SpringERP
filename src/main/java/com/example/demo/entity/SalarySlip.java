@@ -1,7 +1,5 @@
 package com.example.demo.entity;
 
-import java.time.LocalDate;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -25,13 +23,13 @@ public class SalarySlip {
     private String company;
 
     @Column(name = "posting_date")
-    private LocalDate postingDate;
+    private String postingDate;
 
     @Column(name = "start_date")
-    private LocalDate startDate;
+    private String startDate;
 
     @Column(name = "end_date")
-    private LocalDate endDate;
+    private String endDate;
 
     @Column(name = "payroll_frequency")
     private String payrollFrequency;
@@ -77,14 +75,14 @@ public class SalarySlip {
     public String getCompany() { return company; }
     public void setCompany(String company) { this.company = company; }
 
-    public LocalDate getPostingDate() { return postingDate; }
-    public void setPostingDate(LocalDate postingDate) { this.postingDate = postingDate; }
+    public String getPostingDate() { return postingDate; }
+    public void setPostingDate(String postingDate) { this.postingDate = postingDate; }
 
-    public LocalDate getStartDate() { return startDate; }
-    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+    public String getStartDate() { return startDate; }
+    public void setStartDate(String startDate) { this.startDate = startDate; }
 
-    public LocalDate getEndDate() { return endDate; }
-    public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+    public String getEndDate() { return endDate; }
+    public void setEndDate(String endDate) { this.endDate = endDate; }
 
     public String getPayrollFrequency() { return payrollFrequency; }
     public void setPayrollFrequency(String payrollFrequency) { this.payrollFrequency = payrollFrequency; }

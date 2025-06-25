@@ -15,4 +15,8 @@ public class SalaryStructureAssignmentDTO {
     String currency;
     String company;
     String employee;
+
+    public SalaryStructureAssignmentDTO(){
+        this.setCurrency("ALL");
+    }
 }

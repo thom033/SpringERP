@@ -76,12 +76,11 @@ public class EmployeeService {
                 employees.add(dto);
             }
         }
-        
-
-        System.out.println("Liste des employés récupérés :");
-        for (EmployeeDTO emp : employees) {
-            System.out.println("Empname: "+emp.getName()+" empRef: " + emp.getRef() + "first_name: " + emp.getFirst_name() + " last_name: " + emp.getLast_name());
-        }
+    
+        // System.out.println("Liste des employés récupérés :");
+        // for (EmployeeDTO emp : employees) {
+        //     System.out.println("Empname: "+emp.getName()+" empRef: " + emp.getRef() + "first_name: " + emp.getFirst_name() + " last_name: " + emp.getLast_name());
+        // }
         
         return employees;
     }
@@ -181,7 +180,7 @@ public class EmployeeService {
         return val;
     }
     
-     void createEmployee(String sid, EmployeeDTO employeeDTO) throws Exception {
+    public void createEmployee(String sid, EmployeeDTO employeeDTO) throws Exception {
         String url = baseUrl + "/api/resource/Employee";
         JSONObject json = new JSONObject();
         json.put("doctype", "Employee");
@@ -213,6 +212,30 @@ public class EmployeeService {
 
         // System.out.println("Response: " + response.getBody().toPrettyString());
         System.out.println("Employee created w => ref:" + employeeDTO.getRef());
+    }
+
+    public void deleteEmployee(String sid, String employeeName) {
+        String url = baseUrl + "/api/resource/Employee/" + employeeName;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+            url,
+            HttpMethod.DELETE,
+            entity,
+            String.class
+        );
+
+        System.out.println("Delete response: " + response.getBody());
+    }
+
+    public void deleteList(String sid, List<EmployeeDTO> list){
+        for (EmployeeDTO employee : list) {
+            deleteEmployee(sid, employee.getName());
+        }
     }
 
     public void saveEmployee(String sid, List<EmployeeDTO> employees) throws Exception {
